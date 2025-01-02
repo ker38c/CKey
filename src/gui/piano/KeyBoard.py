@@ -1,26 +1,22 @@
 import tkinter
-
+from config.Setting import Setting
 class Key(tkinter.Button):
-    def __init__(self, master=None, name: str="", **kargs):
+    def __init__(self, master=None, name: str="", setting: Setting=None, **kargs):
         super().__init__(master=master, **kargs)
-        # ToDo enable to change color from setting
-        self.config(activebackground="yellow")
+        self.config(activebackground=setting.gui.KeyPushedColor)
         self.name = name
 
 class WhiteKey(Key):
-    def __init__(self, master=None, name: str="", **kargs):
-        super().__init__(master=master, name=name, **kargs)
+    def __init__(self, master=None, name: str="", setting: Setting=None, **kargs):
+        super().__init__(master=master, name=name, setting=setting, **kargs)
         self.config(background="white")
 
 class BlackKey(Key):
-    def __init__(self, master=None, name: str="", **kargs):
-        super().__init__(master=master, name=name, **kargs)
+    def __init__(self, master=None, name: str="", setting: Setting=None, **kargs):
+        super().__init__(master=master, name=name, setting=setting, **kargs)
         self.config(background="black")
 
 class KeyBoard(tkinter.Frame):
-    # ToDo enable to change from setting
-    KEY_WIDTH = 23
-    KEY_HEIGHT = KEY_WIDTH * 5
 
     WHITE_KEY_NAME = [
         ["A-1", "B-1"],
@@ -44,14 +40,21 @@ class KeyBoard(tkinter.Frame):
         ["C#6", "D#6", "", "F#6", "G#6", "A#6", ""],
     ]
 
-    def __init__(self, master=None, **kargs):
+    def __init__(self, master=None, setting: Setting=None, **kargs):
         super().__init__(master=master, **kargs)
 
         # Resize frame to total keyboard width
+        self.setting = setting
+
+        self.KEY_WIDTH = int(self.setting.gui.Width / self.get_white_key_num())
+        self.KEY_HEIGHT = self.KEY_WIDTH * 5
+        self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
+        self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
+
         self.config(width=self.KEY_WIDTH * self.get_white_key_num(), height=self.KEY_HEIGHT)
 
-        self.white_keys = [WhiteKey(self, name=key) for octabe in self.WHITE_KEY_NAME for key in octabe]
-        self.black_keys = [BlackKey(self, name=key) for octabe in self.BLACK_KEY_NAME for key in octabe]
+        self.white_keys = [WhiteKey(self, name=key, setting=setting) for octabe in self.WHITE_KEY_NAME for key in octabe]
+        self.black_keys = [BlackKey(self, name=key, setting=setting) for octabe in self.BLACK_KEY_NAME for key in octabe]
         self.keys = self.white_keys + self.black_keys
 
         self.place_keyboard()
@@ -68,12 +71,10 @@ class KeyBoard(tkinter.Frame):
             key.place(x=i * self.KEY_WIDTH, y=0, width=self.KEY_WIDTH, height=self.KEY_HEIGHT)
 
         # Place black key
-        BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
-        BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
         for i, key in enumerate(self.black_keys):
             if key.name == "":
                 continue
-            key.place(x=i * self.KEY_WIDTH + BLACK_KEY_WIDTH * 1.5, y=0, width=BLACK_KEY_WIDTH, height=BLACK_KEY_HEIGHT)
+            key.place(x=i * self.KEY_WIDTH + self.BLACK_KEY_WIDTH * 1.5, y=0, width=self.BLACK_KEY_WIDTH, height=self.BLACK_KEY_HEIGHT)
 
     def find_key(self, name: str)->Key:
         for key in self.keys:

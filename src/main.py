@@ -1,7 +1,9 @@
 from gui.MainWindow import MainWindow
+from config.Setting import Setting
 
 def main():
-    window = MainWindow()
+    setting = Setting()
+    window = MainWindow(setting)
     window.start()
 
 
