@@ -77,6 +77,8 @@ class KeyBoard(tkinter.Frame):
             key.place(x=i * self.KEY_WIDTH + self.BLACK_KEY_WIDTH * 1.5, y=0, width=self.BLACK_KEY_WIDTH, height=self.BLACK_KEY_HEIGHT)
 
     def find_key(self, name: str)->Key:
+        if name == "":
+            return None
         for key in self.keys:
             if name == key.name:
                 return key
