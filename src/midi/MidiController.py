@@ -4,10 +4,24 @@ import time
 from gui.piano.KeyBoard import KeyBoard
 
 class MidiController():
-    def __init__(self, keyboard: KeyBoard):
+    def __init__(self):
         pygame.midi.init()
-        self.keyboard = keyboard
         self.start = False
+
+        self.midi_in_id = pygame.midi.get_default_input_id()
+        self.midi_out_id = pygame.midi.get_default_output_id()
+
+        midi_count = pygame.midi.get_count()
+        self.midi_in_info = []
+        self.midi_out_info = []
+        for i in range(midi_count):
+            info = pygame.midi.get_device_info(i)
+            # MIDI input device
+            if info[2] == 1:
+                self.midi_in_info.append(info)
+            # MIDI output device
+            elif info[3] == 1:
+                self.midi_out_info.append(info)
 
         self.NOTE_NAME = [
             "C-2","C#-2","D-2","D#-2","E-1","F-1","F#-1","G-2","G#-2","A-2","A#-2","B-2",
@@ -27,12 +41,14 @@ class MidiController():
             "C8", "C#8", "D8", "D#8", "E8", "F8", "F#8", "G8"
         ]
 
+    def init_keyboard(self, keyboard: KeyBoard):
+        self.keyboard = keyboard
+
     def connect(self)->bool:
-        input_dev_id = pygame.midi.get_default_input_id()
-        output_dev_id = pygame.midi.get_default_output_id()
+
         try:
-            self.midiin = pygame.midi.Input(input_dev_id)
-            self.midiout = pygame.midi.Output(output_dev_id)
+            self.midiin = pygame.midi.Input(self.midi_in_id)
+            self.midiout = pygame.midi.Output(self.midi_out_id)
             self.start = True
             return True
         except:
