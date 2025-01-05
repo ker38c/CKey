@@ -14,6 +14,7 @@ class MidiController():
         midi_count = pygame.midi.get_count()
         self.midi_in_info = []
         self.midi_out_info = []
+        self.midi_info = []
         for i in range(midi_count):
             info = pygame.midi.get_device_info(i)
             # MIDI input device
@@ -22,6 +23,7 @@ class MidiController():
             # MIDI output device
             elif info[3] == 1:
                 self.midi_out_info.append(info)
+            self.midi_info.append(info)
 
         self.NOTE_NAME = [
             "C-2","C#-2","D-2","D#-2","E-1","F-1","F#-1","G-2","G#-2","A-2","A#-2","B-2",
@@ -55,11 +57,20 @@ class MidiController():
             return False
 
     def receive(self):
+        print("waiting for midi device connection.")
+        self.wait_connect()
+        print("midi device ready.")
         while self.start:
             if(self.midiin.poll()):
                 recv = self.midiin.read(1)
                 self.handler(recv[0])
             time.sleep(0.001)
+
+    def wait_connect(self):
+        while True:
+            if self.start == True:
+                return
+            time.sleep(0.1)
 
     def handler(self, recv: list):
         [status, data1, data2, _], _ = recv

@@ -5,23 +5,19 @@ from midi.MidiController import MidiController
 
 def main():
     setting = Setting()
-    window = MainWindow(setting)
-    midi = MidiController(window.piano_tab.keyboard)
+    midi = MidiController()
+    window = MainWindow(setting, midi)
+    midi.init_keyboard(window.piano_tab.keyboard)
 
-    if midi.connect():
-        # MIDI thread
-        midi_thread = threading.Thread(target=midi.receive)
-        midi_thread.start()
-
-    else:
-        print("midi device is not connected.")
+    # MIDI thread
+    midi_thread = threading.Thread(target=midi.receive)
+    midi_thread.start()
 
     # gui
     window.start()
 
-    if midi.start:
-        midi.start = False
-        midi_thread.join()
+    midi.start = False
+    midi_thread.join()
     print("CKey exit")
 
 
