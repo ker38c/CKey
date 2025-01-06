@@ -80,7 +80,7 @@ class MidiController():
             key = self.keyboard.find_key(self.get_key_name(data1))
             if key == None:
                 return
-            key.config(state=tkinter.DISABLED)
+            key.config(state=tkinter.NORMAL)
             self.midiout.note_off(note=data1)
 
         # Note On
@@ -96,6 +96,10 @@ class MidiController():
             # Sustain On/Off
             if data1 == 0x40:
                 self.midiout.write_short(0xB0, data1, data2)
+                if data2 > 0:
+                    self.keyboard.sustain.config(state=tkinter.ACTIVE)
+                else:
+                    self.keyboard.sustain.config(state=tkinter.NORMAL)
 
     def get_key_name(self, key_num: int)->str:
         if (key_num < 0) or (key_num >= 128):

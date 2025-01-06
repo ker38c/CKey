@@ -48,14 +48,18 @@ class KeyBoard(tkinter.Frame):
 
         self.KEY_WIDTH = int(self.setting.gui.Width / self.get_white_key_num())
         self.KEY_HEIGHT = self.KEY_WIDTH * 5
+        self.PEDAL_WIDTH = self.KEY_WIDTH * 3
+        self.PEDAL_HEIGHT = self.KEY_WIDTH
         self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
         self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
 
-        self.config(width=self.KEY_WIDTH * self.get_white_key_num(), height=self.KEY_HEIGHT)
+        self.config(width=self.KEY_WIDTH * self.get_white_key_num(), height=self.KEY_HEIGHT + self.PEDAL_HEIGHT)
 
         self.white_keys = [WhiteKey(self, name=key, setting=setting) for octabe in self.WHITE_KEY_NAME for key in octabe]
         self.black_keys = [BlackKey(self, name=key, setting=setting) for octabe in self.BLACK_KEY_NAME for key in octabe]
         self.keys = self.white_keys + self.black_keys
+
+        self.sustain = tkinter.Button(self, activebackground=self.setting.gui.KeyPushedColor)
 
         self.place_keyboard()
 
@@ -75,6 +79,9 @@ class KeyBoard(tkinter.Frame):
             if key.name == "":
                 continue
             key.place(x=i * self.KEY_WIDTH + self.BLACK_KEY_WIDTH * 1.5, y=0, width=self.BLACK_KEY_WIDTH, height=self.BLACK_KEY_HEIGHT)
+
+        # Place sustain pedal
+        self.sustain.place(x=self.setting.gui.Width / 2, y=self.KEY_HEIGHT, width=self.PEDAL_WIDTH, height=self.PEDAL_HEIGHT)
 
     def find_key(self, name: str)->Key:
         if name == "":
