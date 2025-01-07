@@ -12,17 +12,9 @@ class MidiController():
         self.midi_out_id = pygame.midi.get_default_output_id()
 
         midi_count = pygame.midi.get_count()
-        self.midi_in_info = []
-        self.midi_out_info = []
         self.midi_info = []
         for i in range(midi_count):
             info = pygame.midi.get_device_info(i)
-            # MIDI input device
-            if info[2] == 1:
-                self.midi_in_info.append(info)
-            # MIDI output device
-            elif info[3] == 1:
-                self.midi_out_info.append(info)
             self.midi_info.append(info)
 
         self.NOTE_NAME = [

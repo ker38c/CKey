@@ -33,14 +33,16 @@ class PianoTab():
 
     def get_midi_in_list(self) -> list[str]:
         midi_in_name_list = []
-        for i, dev in enumerate(self.midi.midi_in_info):
-            midi_in_name_list.append(dev[1])
+        for i, info in enumerate(self.midi.midi_info):
+            if info[2] == 1:
+                midi_in_name_list.append(info[1])
         return midi_in_name_list
 
     def get_midi_out_list(self) -> list[str]:
         midi_out_name_list = []
-        for i, dev in enumerate(self.midi.midi_out_info):
-            midi_out_name_list.append(dev[1])
+        for i, info in enumerate(self.midi.midi_info):
+            if info[3] == 1:
+                midi_out_name_list.append(info[1])
         return midi_out_name_list
 
     def connect_midi(self):
