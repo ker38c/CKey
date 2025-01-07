@@ -16,7 +16,7 @@ def main():
     # gui
     window.start()
 
-    midi.start = False
+    midi.end = True
     midi_thread.join()
     print("CKey exit")
 

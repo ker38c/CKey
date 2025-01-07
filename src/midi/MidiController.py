@@ -7,6 +7,7 @@ class MidiController():
     def __init__(self):
         pygame.midi.init()
         self.start = False
+        self.end = False
 
         self.midi_in_id = pygame.midi.get_default_input_id()
         self.midi_out_id = pygame.midi.get_default_output_id()
@@ -52,7 +53,7 @@ class MidiController():
         print("waiting for midi device connection.")
         self.wait_connect()
         print("midi device ready.")
-        while self.start:
+        while self.end == False:
             if(self.midiin.poll()):
                 recv = self.midiin.read(1)
                 self.handler(recv[0])
@@ -60,7 +61,7 @@ class MidiController():
 
     def wait_connect(self):
         while True:
-            if self.start == True:
+            if self.start == True or self.end == True:
                 return
             time.sleep(0.1)
 
