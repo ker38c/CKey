@@ -4,6 +4,13 @@ import time
 from gui.piano.KeyBoard import KeyBoard
 
 class MidiController():
+    # Constants
+    INTERF = 0
+    NAME = 1
+    INPUT = 2
+    OUTPUT = 3
+    OPENED = 4
+
     def __init__(self):
         pygame.midi.init()
         self.start = False
