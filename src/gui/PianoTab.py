@@ -35,8 +35,8 @@ class PianoTab():
         self.keyboard.grid(row=3, column=0, columnspan=16)
 
     def get_midi_in_list_and_default(self) -> tuple[list[str], str]:
-        midi_in_name_list = []
-        default_midi_in_name = ""
+        midi_in_name_list = ["---"]
+        default_midi_in_name = "---"
         for i, info in enumerate(self.midi.midi_info):
             if info[MidiController.INPUT] == 1:
                 if i == self.midi.midi_in_id:
@@ -46,8 +46,8 @@ class PianoTab():
         return midi_in_name_list, default_midi_in_name
 
     def get_midi_out_list_and_default(self) -> tuple[list[str], str]:
-        midi_out_name_list = []
-        default_midi_out_name = ""
+        midi_out_name_list = ["---"]
+        default_midi_out_name = "---"
         for i, info in enumerate(self.midi.midi_info):
             if info[MidiController.OUTPUT] == 1:
                 if i == self.midi.midi_out_id:
@@ -56,12 +56,12 @@ class PianoTab():
         return midi_out_name_list, default_midi_out_name
 
     def connect_midi(self):
-        self.midi.midi_in_id = self.get_midi_id_from_info(self.midi_in_name.get())
-        self.midi.midi_out_id = self.get_midi_id_from_info(self.midi_out_name.get())
+        self.midi.midi_in_id = self.get_midi_id_from_name(self.midi_in_name.get())
+        self.midi.midi_out_id = self.get_midi_id_from_name(self.midi_out_name.get())
         self.midi.connect()
         self.button_connect.config(state="disabled")
 
-    def get_midi_id_from_info(self, name: str):
+    def get_midi_id_from_name(self, name: str):
         for i, info in enumerate(self.midi.midi_info):
             if name == info[MidiController.NAME].decode("utf-8"):
                 return i

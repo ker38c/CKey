@@ -15,12 +15,13 @@ class MidiController():
         pygame.midi.init()
         self.start = False
         self.end = False
-
+        self.midiin = None
+        self.midiout = None
         self.midi_in_id = pygame.midi.get_default_input_id()
         self.midi_out_id = pygame.midi.get_default_output_id()
-
         midi_count = pygame.midi.get_count()
         self.midi_info = []
+
         for i in range(midi_count):
             info = pygame.midi.get_device_info(i)
             self.midi_info.append(info)
@@ -49,8 +50,10 @@ class MidiController():
     def connect(self)->bool:
 
         try:
-            self.midiin = pygame.midi.Input(self.midi_in_id)
-            self.midiout = pygame.midi.Output(self.midi_out_id)
+            if self.midi_in_id != -1:
+                self.midiin = pygame.midi.Input(self.midi_in_id)
+            if self.midi_out_id != -1:
+                self.midiout = pygame.midi.Output(self.midi_out_id)
             self.start = True
             return True
         except:
@@ -61,9 +64,10 @@ class MidiController():
         self.wait_connect()
         print("midi device ready.")
         while self.end == False:
-            if(self.midiin.poll()):
-                recv = self.midiin.read(1)
-                self.handler(recv[0])
+            if self.midiin is not None:
+                if(self.midiin.poll()):
+                    recv = self.midiin.read(1)
+                    self.handler(recv[0])
             time.sleep(0.001)
 
     def wait_connect(self):
@@ -77,31 +81,43 @@ class MidiController():
 
         # Note Off
         if (status & 0xF0) == 0x80:
-            key = self.keyboard.find_key(self.get_key_name(data1))
-            if key == None:
-                return
-            key.config(state=tkinter.NORMAL)
-            self.midiout.note_off(note=data1)
+            self.note_off(key_name=data1)
 
         # Note On
         elif (status & 0xF0) == 0x90:
-            key = self.keyboard.find_key(self.get_key_name(data1))
-            if key == None:
-                return
-            key.config(state=tkinter.ACTIVE)
-            self.midiout.note_on(note=data1, velocity=data2)
+            self.note_on(key_name=data1, velocity=data2)
 
         # Control Change
         elif (status & 0xF0) == 0xB0:
             # Sustain On/Off
             if data1 == 0x40:
-                self.midiout.write_short(0xB0, data1, data2)
-                if data2 > 0:
-                    self.keyboard.sustain.config(state=tkinter.ACTIVE)
-                else:
-                    self.keyboard.sustain.config(state=tkinter.NORMAL)
+                self.sustain_change(status=status, value=data2)
 
     def get_key_name(self, key_num: int)->str:
         if (key_num < 0) or (key_num >= 128):
             return ""
         return self.NOTE_NAME[key_num]
+
+    def note_on(self, key_name: str, velocity: str):
+        key = self.keyboard.find_key(self.get_key_name(key_name))
+        if key == "":
+            return
+        if self.midiout is not None:
+            self.midiout.note_on(note=key_name, velocity=velocity)
+        key.config(state=tkinter.ACTIVE)
+
+    def note_off(self, key_name: str):
+        key = self.keyboard.find_key(self.get_key_name(key_name))
+        if key == "":
+            return
+        if self.midiout is not None:
+            self.midiout.note_off(note=key_name)
+        key.config(state=tkinter.NORMAL)
+
+    def sustain_change(self, status: str, value: str):
+        if self.midiout is not None:
+            self.midiout.write_short(status, 0x40, value)
+        if value > 0:
+            self.keyboard.sustain.config(state=tkinter.ACTIVE)
+        else:
+            self.keyboard.sustain.config(state=tkinter.NORMAL)
