@@ -1,6 +1,7 @@
 import tkinter
 import tkinter.ttk
 from gui.PianoTab import PianoTab
+from gui.SettingsTab import SettingsTab
 from config.Setting import Setting
 from midi.MidiController import MidiController
 class MainWindow():
@@ -14,7 +15,9 @@ class MainWindow():
 
         # create tabs
         self.piano_tab = PianoTab(self.notebook, setting, midi)
+        self.settings_tab = SettingsTab(self.notebook, setting)
         self.notebook.add(self.piano_tab.frame, text="Piano")
+        self.notebook.add(self.settings_tab.frame, text="Settings")
 
     def start(self):
         self.root.mainloop()
