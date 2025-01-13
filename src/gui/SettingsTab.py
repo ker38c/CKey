@@ -32,4 +32,5 @@ class SettingsTab():
     def apply_setting(self):
         self.setting.gui.Width = int(self.text_width.get())
         self.setting.gui.Height = int(self.text_height.get())
+        self.setting.save_setting()
 

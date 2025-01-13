@@ -34,3 +34,10 @@ class Setting():
         self.gui.Width = int(self.parser["GUI"]["Width"])
         self.gui.Height = int(self.parser["GUI"]["Height"])
         self.gui.KeyPushedColor = self.parser["GUI"]["KeyPushedColor"]
+
+    def save_setting(self):
+        with open(self.CONFIG_FILE, 'w') as file:
+            self.parser["GUI"]["Width"] = str(self.gui.Width)
+            self.parser["GUI"]["Height"] = str(self.gui.Height)
+            self.parser["GUI"]["KeyPushedColor"] = str(self.gui.KeyPushedColor)
+            self.parser.write(file)

@@ -9,7 +9,10 @@ class MainWindow():
         self.setting = setting
         self.root = tkinter.Tk()
         self.root.title("CKey")
-        self.root.geometry(f"{self.setting.gui.Width}x{self.setting.gui.Height}")
+        try:
+            self.root.geometry(f"{self.setting.gui.Width}x{self.setting.gui.Height}")
+        except:
+            self.root.geometry("1280x400")
         self.notebook = tkinter.ttk.Notebook(self.root)
         self.notebook.pack(expand=True, fill="both", padx=10, pady=10)
 
