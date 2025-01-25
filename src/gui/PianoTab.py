@@ -59,7 +59,6 @@ class PianoTab():
         self.midi.midi_in_id = self.get_midi_id_from_name(self.midi_in_name.get())
         self.midi.midi_out_id = self.get_midi_id_from_name(self.midi_out_name.get())
         self.midi.connect()
-        self.button_connect.config(state="disabled")
 
     def get_midi_id_from_name(self, name: str):
         for i, info in enumerate(self.midi.midi_info):

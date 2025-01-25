@@ -44,10 +44,20 @@ class MidiController():
             "C8", "C#8", "D8", "D#8", "E8", "F8", "F#8", "G8"
         ]
 
+        self.connect()
+
     def init_keyboard(self, keyboard: KeyBoard):
         self.keyboard = keyboard
 
     def connect(self)->bool:
+
+        if self.start == True:
+            self.start = False
+            self.midiin = None
+            self.midiout = None
+            pygame.midi.quit()
+            pygame.midi.init()
+            print("MidiController restart.")
 
         try:
             if self.midi_in_id != -1:
@@ -60,10 +70,8 @@ class MidiController():
             return False
 
     def receive(self):
-        print("waiting for midi device connection.")
-        self.wait_connect()
-        print("midi device ready.")
         while self.end == False:
+            self.wait_connect()
             if self.midiin is not None:
                 if(self.midiin.poll()):
                     recv = self.midiin.read(1)
