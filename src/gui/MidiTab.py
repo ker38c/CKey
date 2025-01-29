@@ -17,6 +17,7 @@ class MidiTab():
         self.midi_in_name = tkinter.StringVar(self.frame)
         self.combo_midiin = tkinter.ttk.Combobox(self.frame, height=3, values=self.midi_in_name_list, state="readonly", textvariable=self.midi_in_name)
         self.combo_midiin.set(self.default_midi_in_name)
+        self.combo_midiin.bind("<<ComboboxSelected>>", self.on_combobox_selected)
         self.combo_midiin.grid(row=0, column=1)
 
         # MIDI output device
@@ -26,6 +27,7 @@ class MidiTab():
         self.midi_out_name = tkinter.StringVar(self.frame)
         self.combo_midiout = tkinter.ttk.Combobox(self.frame, height=3, values=self.midi_out_name_list, state="readonly", textvariable=self.midi_out_name)
         self.combo_midiout.set(self.default_midi_out_name)
+        self.combo_midiout.bind("<<ComboboxSelected>>", self.on_combobox_selected)
         self.combo_midiout.grid(row=1, column=1)
 
         # Apply
@@ -63,3 +65,6 @@ class MidiTab():
             if name == info[MidiController.NAME].decode("utf-8"):
                 return i
         return -1
+
+    def on_combobox_selected(self, event):
+        self.frame.focus_set()

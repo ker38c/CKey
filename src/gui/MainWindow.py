@@ -25,5 +25,10 @@ class MainWindow():
         self.notebook.add(self.midi_tab.frame, text="MIDI")
         self.notebook.add(self.settings_tab.frame, text="Settings")
 
+        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+
     def start(self):
         self.root.mainloop()
+
+    def on_tab_changed(self, event):
+        self.root.focus_set()
