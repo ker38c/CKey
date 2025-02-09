@@ -10,6 +10,7 @@ class SettingsTab():
         self.label_window = tkinter.Label(self.frame, text="Window settings")
         self.label_window.grid(row=0, column=0)
 
+        # window width
         self.label_width = tkinter.Label(self.frame, text="Window width")
         self.label_width.grid(row=1, column=0)
 
@@ -18,6 +19,7 @@ class SettingsTab():
         self.entry_width = tkinter.Entry(self.frame, textvariable=self.text_width)
         self.entry_width.grid(row=1, column=1)
 
+        # window height
         self.label_height = tkinter.Label(self.frame, text="Window height")
         self.label_height.grid(row=2, column=0)
 
@@ -26,11 +28,31 @@ class SettingsTab():
         self.entry_height = tkinter.Entry(self.frame, textvariable=self.text_height)
         self.entry_height.grid(row=2, column=1)
 
+        # key pushed color
+        self.label_key_pushed_coler = tkinter.Label(self.frame, text="Key pushed color")
+        self.label_key_pushed_coler.grid(row=3, column=0)
+
+        self.text_key_pushed_color = tkinter.StringVar()
+        self.text_key_pushed_color.set(setting.gui.KeyPushedColor)
+        self.entry_key_pushed_color = tkinter.Entry(self.frame, textvariable=self.text_key_pushed_color)
+        self.entry_key_pushed_color.bind("<KeyRelease>", self.on_color_updated)
+        self.entry_key_pushed_color.grid(row=3, column=1)
+
+        # color indicator
+        self.label_color_box = tkinter.Label(self.frame, width=2, bg=setting.gui.KeyPushedColor)
+        self.label_color_box.grid(row=3, column=2)
+
         self.button_apply = tkinter.Button(self.frame, text="apply", command=self.apply_setting)
-        self.button_apply.grid(row=3, column=1)
+        self.button_apply.grid(row=4, column=1)
 
     def apply_setting(self):
         self.setting.gui.Width = int(self.text_width.get())
         self.setting.gui.Height = int(self.text_height.get())
+        self.setting.gui.KeyPushedColor = self.text_key_pushed_color.get()
         self.setting.save_setting()
 
+    def on_color_updated(self, event):
+        try:
+            self.label_color_box.config(bg=self.text_key_pushed_color.get())
+        except:
+            pass
