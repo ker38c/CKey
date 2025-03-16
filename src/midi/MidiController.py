@@ -1,6 +1,8 @@
 import tkinter
 import pygame.midi
 import time
+from threading import Lock
+from queue import Queue
 from gui.piano.KeyBoard import KeyBoard
 
 class MidiController():
@@ -13,6 +15,8 @@ class MidiController():
 
     def __init__(self):
         pygame.midi.init()
+        self.lock = Lock()
+        self.event_queue = Queue()
         self.start = False
         self.end = False
         self.midiin = None
@@ -50,39 +54,58 @@ class MidiController():
         self.keyboard = keyboard
 
     def connect(self)->bool:
+        with self.lock:
+            if self.start == True:
+                self.start = False
+                self.midiin = None
+                self.midiout = None
+                pygame.midi.quit()
+                pygame.midi.init()
+                print("MidiController restart.")
 
-        if self.start == True:
-            self.start = False
-            self.midiin = None
-            self.midiout = None
-            pygame.midi.quit()
-            pygame.midi.init()
-            print("MidiController restart.")
-
-        try:
-            if self.midi_in_id != -1:
-                self.midiin = pygame.midi.Input(self.midi_in_id)
-            if self.midi_out_id != -1:
-                self.midiout = pygame.midi.Output(self.midi_out_id)
-            self.start = True
-            return True
-        except:
-            return False
+            try:
+                if self.midi_in_id != -1:
+                    self.midiin = pygame.midi.Input(self.midi_in_id)
+                if self.midi_out_id != -1:
+                    self.midiout = pygame.midi.Output(self.midi_out_id)
+                self.start = True
+                return True
+            except:
+                return False
 
     def receive(self):
-        while self.end == False:
+        while True:
+            with self.lock:
+                if self.end == True:
+                    break
             self.wait_connect()
             if self.midiin is not None:
                 if(self.midiin.poll()):
                     recv = self.midiin.read(1)
-                    self.handler(recv[0])
+                    for event in recv:
+                        self.event_queue.put(event)
             time.sleep(0.001)
+        print("midi recv therad exit")
+
 
     def wait_connect(self):
         while True:
-            if self.start == True or self.end == True:
-                return
+            with self.lock:
+                if self.start == True or self.end == True:
+                    return
             time.sleep(0.1)
+
+    def process_event(self):
+        while True:
+            try:
+                event = self.event_queue.get(timeout=1.0)
+                self.handler(event)
+            except:
+                with self.lock:
+                    if self.end == True:
+                        print("midi process thread exit")
+                        return
+
 
     def handler(self, recv: list):
         [status, data1, data2, _], _ = recv

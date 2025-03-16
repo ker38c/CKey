@@ -9,15 +9,22 @@ def main():
     window = MainWindow(setting, midi)
     midi.init_keyboard(window.piano_tab.keyboard)
 
-    # MIDI thread
-    midi_thread = threading.Thread(target=midi.receive)
-    midi_thread.start()
+    # MIDI receive thread
+    midi_recv_thread = threading.Thread(target=midi.receive)
+    midi_recv_thread.start()
+
+    # MIDI process thread
+    midi_proc_thread = threading.Thread(target=midi.process_event)
+    midi_proc_thread.start()
 
     # gui
     window.start()
 
-    midi.end = True
-    midi_thread.join()
+    # exit
+    with midi.lock:
+        midi.end = True
+    midi_recv_thread.join()
+    midi_proc_thread.join()
     print("CKey exit")
 
 
