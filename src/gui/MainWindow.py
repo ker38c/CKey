@@ -3,6 +3,7 @@ import tkinter.ttk
 from gui.PianoTab import PianoTab
 from gui.SettingsTab import SettingsTab
 from gui.MidiTab import MidiTab
+from gui.AboutTab import AboutTab
 from config.Setting import Setting
 from midi.MidiController import MidiController
 class MainWindow():
@@ -21,9 +22,11 @@ class MainWindow():
         self.piano_tab = PianoTab(self.notebook, setting)
         self.midi_tab = MidiTab(self.notebook, midi)
         self.settings_tab = SettingsTab(self.notebook, setting)
+        self.about_tab = AboutTab(self.notebook)
         self.notebook.add(self.piano_tab.frame, text="Piano")
         self.notebook.add(self.midi_tab.frame, text="MIDI")
         self.notebook.add(self.settings_tab.frame, text="Settings")
+        self.notebook.add(self.about_tab.frame, text="About")
 
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
 
