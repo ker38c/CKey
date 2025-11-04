@@ -8,7 +8,7 @@ class AboutTab:
     def __init__(self, root: tkinter.ttk.Notebook):
         self.frame = tkinter.Frame(root)
 
-        # Title with version
+        # CKey version
         self.title_label = tkinter.Label(
             self.frame,
             text=f"CKey v{__version__}",
@@ -16,14 +16,7 @@ class AboutTab:
         )
         self.title_label.pack(pady=20)
 
-        # Copyright and Version
-        self.copyright_label = tkinter.Label(
-            self.frame,
-            text="Copyright (c) 2025 ker38c",
-            font=("Helvetica", 10)
-        )
-        self.copyright_label.pack(pady=5)
-
+        # CKey URL
         self.url_label = tkinter.Label(
             self.frame,
             text="https://github.com/ker38c/CKey",
@@ -35,15 +28,50 @@ class AboutTab:
         self.license_button = tkinter.Button(
             self.frame,
             text="View License",
-            command=self.show_license_popup,
+            command=lambda: self.show_license_popup("CKey license", "LICENSE"),
             font=("Helvetica", 10)
         )
         self.license_button.pack(pady=10)
 
-    def show_license_popup(self):
+        # Used Libraries
+        self.libs_label = tkinter.Label(
+            self.frame,
+            text="CKey uses libraries below:",
+            font=("Helvetica", 12, "bold")
+        )
+        self.libs_label.pack(pady=(10, 5))
+
+        # pygame
+        self.pygame_label = tkinter.Label(
+            self.frame,
+            text=f"Pygame v{pygame.__version__}",
+            font=("Helvetica", 10)
+        )
+        self.pygame_label.pack(pady=2)
+
+        # pygame URL
+        self.pygame_url_label = tkinter.Label(
+            self.frame,
+            text="https://www.pygame.org/",
+            font=("Helvetica", 10)
+        )
+        self.pygame_url_label.pack(pady=2)
+
+        self.pygame_license_button = tkinter.Button(
+            self.frame,
+            text="View License",
+            command=lambda: self.show_license_popup("Pygame license", "docs/license/pygame/LGPL.txt"),
+            font=("Helvetica", 10)
+        )
+        self.pygame_license_button.pack(pady=5)
+
+    def get_basedir(self):
+        return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+    def show_license_popup(self, title: str, license_path: str):
         # Create popup window
         popup = tkinter.Toplevel(self.frame)
-        popup.title("License")
+        popup.title(title)
         popup.geometry("600x400")
 
         # Make the popup modal
@@ -72,7 +100,7 @@ class AboutTab:
 
         # Read and display license text
         try:
-            license_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'LICENSE')
+            license_path = os.path.join(self.get_basedir(), license_path)
             with open(license_path, 'r', encoding='utf-8') as f:
                 license_content = f.read()
             license_text.insert(tkinter.END, license_content)
