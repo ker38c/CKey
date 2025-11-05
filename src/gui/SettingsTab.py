@@ -15,18 +15,20 @@ class SettingsTab():
         self.label_width.grid(row=1, column=0)
 
         self.text_width = tkinter.StringVar()
-        self.text_width.set(setting.gui.Width)
+        self.text_width.set(str(setting.gui.Width))
         self.entry_width = tkinter.Entry(self.frame, textvariable=self.text_width)
         self.entry_width.grid(row=1, column=1)
+        self.entry_width.bind("<FocusOut>", self._on_width_key)
 
         # window height
         self.label_height = tkinter.Label(self.frame, text="Window height")
         self.label_height.grid(row=2, column=0)
 
         self.text_height = tkinter.StringVar()
-        self.text_height.set(setting.gui.Height)
+        self.text_height.set(str(setting.gui.Height))
         self.entry_height = tkinter.Entry(self.frame, textvariable=self.text_height)
         self.entry_height.grid(row=2, column=1)
+        self.entry_height.bind("<FocusOut>", self._on_height_key)
 
         # key pushed color
         self.label_key_pushed_coler = tkinter.Label(self.frame, text="Key pushed color")
@@ -35,24 +37,38 @@ class SettingsTab():
         self.text_key_pushed_color = tkinter.StringVar()
         self.text_key_pushed_color.set(setting.gui.KeyPushedColor)
         self.entry_key_pushed_color = tkinter.Entry(self.frame, textvariable=self.text_key_pushed_color)
-        self.entry_key_pushed_color.bind("<KeyRelease>", self.on_color_updated)
+        self.entry_key_pushed_color.bind("<FocusOut>", self.on_color_updated)
         self.entry_key_pushed_color.grid(row=3, column=1)
 
         # color indicator
         self.label_color_box = tkinter.Label(self.frame, width=2, bg=setting.gui.KeyPushedColor)
         self.label_color_box.grid(row=3, column=2)
 
-        self.button_apply = tkinter.Button(self.frame, text="apply", command=self.apply_setting)
+        self.button_apply = tkinter.Button(self.frame, text="Save", command=self.apply_setting)
         self.button_apply.grid(row=4, column=1)
 
     def apply_setting(self):
-        self.setting.gui.Width = int(self.text_width.get())
-        self.setting.gui.Height = int(self.text_height.get())
-        self.setting.gui.KeyPushedColor = self.text_key_pushed_color.get()
         self.setting.save_setting()
+
+    def _on_width_key(self, event):
+        try:
+            self.setting.gui.Width = self.text_width.get()
+            # Set the rounded value from Setting to text_width
+            self.text_width.set(str(self.setting.gui.Width))
+        except:
+            pass
+
+    def _on_height_key(self, event):
+        try:
+            self.setting.gui.Height = self.text_height.get()
+            # Set the rounded value from Setting to text_height
+            self.text_height.set(str(self.setting.gui.Height))
+        except:
+            pass
 
     def on_color_updated(self, event):
         try:
+            self.setting.gui.KeyPushedColor = self.text_key_pushed_color.get()
             self.label_color_box.config(bg=self.text_key_pushed_color.get())
         except:
             pass
