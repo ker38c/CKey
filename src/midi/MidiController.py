@@ -74,18 +74,30 @@ class MidiController():
                 return False
 
     def receive(self):
-        while True:
-            with self.lock:
-                if self.end == True:
-                    break
-            self.wait_connect()
+        try:
+            while True:
+                with self.lock:
+                    if self.end == True:
+                        break
+
+                self.wait_connect()
+
+                if self.midiin is not None:
+                    if(self.midiin.poll()):
+                        recv = self.midiin.read(1)
+                        for event in recv:
+                            self.event_queue.put(event)
+
+                time.sleep(0.001)
+
+        finally:
             if self.midiin is not None:
-                if(self.midiin.poll()):
-                    recv = self.midiin.read(1)
-                    for event in recv:
-                        self.event_queue.put(event)
-            time.sleep(0.001)
-        print("midi recv therad exit")
+                try:
+                    self.midiin.close()
+                except:
+                    pass
+
+            print("MIDI receive thread exit")
 
 
     def wait_connect(self):
