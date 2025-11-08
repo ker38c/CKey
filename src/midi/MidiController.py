@@ -5,14 +5,17 @@ from threading import Lock
 from queue import Queue
 from gui.piano.KeyBoard import KeyBoard
 
-class MidiController():
-    # Constants
-    INTERF = 0
+from enum import IntEnum
+
+class MidiDeviceInfo(IntEnum):
+    """MIDI device information indices"""
+    INTERFACE = 0
     NAME = 1
     INPUT = 2
     OUTPUT = 3
     OPENED = 4
 
+class MidiController():
     def __init__(self):
         pygame.midi.init()
         self.lock = Lock()
