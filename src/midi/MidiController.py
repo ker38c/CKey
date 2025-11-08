@@ -147,6 +147,7 @@ class MidiController():
             return
         if self.midiout is not None:
             self.midiout.note_on(note=key_name, velocity=velocity)
+
         key.config(state=tkinter.ACTIVE)
 
     def note_off(self, key_name: str):
@@ -164,3 +165,18 @@ class MidiController():
             self.keyboard.sustain.config(state=tkinter.ACTIVE)
         else:
             self.keyboard.sustain.config(state=tkinter.NORMAL)
+
+    def add_key_event(self, key_name: str, is_note_on: bool, velocity: int = 100):
+        # Find the MIDI note number for the key name
+        try:
+            note_num = self.NOTE_NAME.index(key_name)
+        except ValueError:
+            return
+
+        # Create MIDI event data
+        status = 0x90 if is_note_on else 0x80  # Note On: 0x90, Note Off: 0x80
+        data2 = velocity if is_note_on else 0
+
+        # Create event in the same format as MIDI input events
+        event = ([status, note_num, data2, 0], 0)
+        self.event_queue.put(event)
