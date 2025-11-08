@@ -5,14 +5,17 @@ from threading import Lock
 from queue import Queue
 from gui.piano.KeyBoard import KeyBoard
 
-class MidiController():
-    # Constants
-    INTERF = 0
+from enum import IntEnum
+
+class MidiDeviceInfo(IntEnum):
+    """MIDI device information indices"""
+    INTERFACE = 0
     NAME = 1
     INPUT = 2
     OUTPUT = 3
     OPENED = 4
 
+class MidiController():
     def __init__(self):
         pygame.midi.init()
         self.lock = Lock()
@@ -74,18 +77,30 @@ class MidiController():
                 return False
 
     def receive(self):
-        while True:
-            with self.lock:
-                if self.end == True:
-                    break
-            self.wait_connect()
+        try:
+            while True:
+                with self.lock:
+                    if self.end == True:
+                        break
+
+                self.wait_connect()
+
+                if self.midiin is not None:
+                    if(self.midiin.poll()):
+                        recv = self.midiin.read(1)
+                        for event in recv:
+                            self.event_queue.put(event)
+
+                time.sleep(0.001)
+
+        finally:
             if self.midiin is not None:
-                if(self.midiin.poll()):
-                    recv = self.midiin.read(1)
-                    for event in recv:
-                        self.event_queue.put(event)
-            time.sleep(0.001)
-        print("midi recv therad exit")
+                try:
+                    self.midiin.close()
+                except:
+                    pass
+
+            print("MIDI receive thread exit")
 
 
     def wait_connect(self):
@@ -135,6 +150,7 @@ class MidiController():
             return
         if self.midiout is not None:
             self.midiout.note_on(note=key_name, velocity=velocity)
+
         key.config(state=tkinter.ACTIVE)
 
     def note_off(self, key_name: str):
@@ -152,3 +168,18 @@ class MidiController():
             self.keyboard.sustain.config(state=tkinter.ACTIVE)
         else:
             self.keyboard.sustain.config(state=tkinter.NORMAL)
+
+    def add_key_event(self, key_name: str, is_note_on: bool, velocity: int = 100):
+        # Find the MIDI note number for the key name
+        try:
+            note_num = self.NOTE_NAME.index(key_name)
+        except ValueError:
+            return
+
+        # Create MIDI event data
+        status = 0x90 if is_note_on else 0x80  # Note On: 0x90, Note Off: 0x80
+        data2 = velocity if is_note_on else 0
+
+        # Create event in the same format as MIDI input events
+        event = ([status, note_num, data2, 0], 0)
+        self.event_queue.put(event)

@@ -1,19 +1,30 @@
 import tkinter
 from config.Setting import Setting
 class Key(tkinter.Button):
-    def __init__(self, master=None, name: str="", setting: Setting=None, **kargs):
+    def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
         super().__init__(master=master, **kargs)
         self.config(activebackground=setting.gui.KeyPushedColor)
         self.name = name
+        self.midi = midi
+        self.bind('<Button-1>', self.on_press)
+        self.bind('<ButtonRelease-1>', self.on_release)
+
+    def on_press(self, event):
+        if self.midi:
+            self.midi.add_key_event(self.name, True)
+
+    def on_release(self, event):
+        if self.midi:
+            self.midi.add_key_event(self.name, False)
 
 class WhiteKey(Key):
-    def __init__(self, master=None, name: str="", setting: Setting=None, **kargs):
-        super().__init__(master=master, name=name, setting=setting, **kargs)
+    def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
+        super().__init__(master=master, name=name, setting=setting, midi=midi, **kargs)
         self.config(background="white")
 
 class BlackKey(Key):
-    def __init__(self, master=None, name: str="", setting: Setting=None, **kargs):
-        super().__init__(master=master, name=name, setting=setting, **kargs)
+    def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
+        super().__init__(master=master, name=name, setting=setting, midi=midi, **kargs)
         self.config(background="black")
 
 class KeyBoard(tkinter.Frame):
@@ -40,11 +51,12 @@ class KeyBoard(tkinter.Frame):
         ["C#6", "D#6", "", "F#6", "G#6", "A#6", ""],
     ]
 
-    def __init__(self, master=None, setting: Setting=None, **kargs):
+    def __init__(self, master=None, setting: Setting=None, midi=None, **kargs):
         super().__init__(master=master, **kargs)
 
         # Resize frame to total keyboard width
         self.setting = setting
+        self.midi = midi
 
         self.KEY_WIDTH = int(self.setting.gui.Width / self.get_white_key_num())
         self.KEY_HEIGHT = self.KEY_WIDTH * 5
@@ -55,8 +67,8 @@ class KeyBoard(tkinter.Frame):
 
         self.config(width=self.KEY_WIDTH * self.get_white_key_num(), height=self.KEY_HEIGHT + self.PEDAL_HEIGHT)
 
-        self.white_keys = [WhiteKey(self, name=key, setting=setting) for octabe in self.WHITE_KEY_NAME for key in octabe]
-        self.black_keys = [BlackKey(self, name=key, setting=setting) for octabe in self.BLACK_KEY_NAME for key in octabe]
+        self.white_keys = [WhiteKey(self, name=key, setting=setting, midi=self.midi) for octabe in self.WHITE_KEY_NAME for key in octabe]
+        self.black_keys = [BlackKey(self, name=key, setting=setting, midi=self.midi) for octabe in self.BLACK_KEY_NAME for key in octabe]
         self.keys = self.white_keys + self.black_keys
 
         self.sustain = tkinter.Button(self, activebackground=self.setting.gui.KeyPushedColor)

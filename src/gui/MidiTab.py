@@ -1,6 +1,7 @@
 import tkinter
 import tkinter.ttk
 from midi.MidiController import MidiController
+from midi.MidiController import MidiDeviceInfo
 
 class MidiTab():
     def __init__(self, root: tkinter.ttk.Notebook, midi: MidiController):
@@ -38,10 +39,10 @@ class MidiTab():
         midi_in_name_list = ["---"]
         default_midi_in_name = "---"
         for i, info in enumerate(self.midi.midi_info):
-            if info[MidiController.INPUT] == 1:
+            if info[MidiDeviceInfo.INPUT] == 1:
                 if i == self.midi.midi_in_id:
-                    default_midi_in_name = info[MidiController.NAME]
-                midi_in_name_list.append(info[MidiController.NAME])
+                    default_midi_in_name = info[MidiDeviceInfo.NAME]
+                midi_in_name_list.append(info[MidiDeviceInfo.NAME])
 
         return midi_in_name_list, default_midi_in_name
 
@@ -49,10 +50,10 @@ class MidiTab():
         midi_out_name_list = ["---"]
         default_midi_out_name = "---"
         for i, info in enumerate(self.midi.midi_info):
-            if info[MidiController.OUTPUT] == 1:
+            if info[MidiDeviceInfo.OUTPUT] == 1:
                 if i == self.midi.midi_out_id:
-                    default_midi_out_name = info[MidiController.NAME]
-                midi_out_name_list.append(info[MidiController.NAME])
+                    default_midi_out_name = info[MidiDeviceInfo.NAME]
+                midi_out_name_list.append(info[MidiDeviceInfo.NAME])
         return midi_out_name_list, default_midi_out_name
 
     def connect_midi(self):
@@ -62,7 +63,7 @@ class MidiTab():
 
     def get_midi_id_from_name(self, name: str):
         for i, info in enumerate(self.midi.midi_info):
-            if name == info[MidiController.NAME].decode("utf-8"):
+            if name == info[MidiDeviceInfo.NAME].decode("utf-8"):
                 return i
         return -1
 

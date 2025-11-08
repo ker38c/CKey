@@ -19,7 +19,7 @@ class MainWindow():
         self.notebook.pack(expand=True, fill="both", padx=10, pady=10)
 
         # create tabs
-        self.piano_tab = PianoTab(self.notebook, setting)
+        self.piano_tab = PianoTab(self.notebook, setting, midi)
         self.midi_tab = MidiTab(self.notebook, midi)
         self.settings_tab = SettingsTab(self.notebook, setting)
         self.about_tab = AboutTab(self.notebook)
