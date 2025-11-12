@@ -1,4 +1,5 @@
 import tkinter
+from tkinter import Canvas
 from config.Setting import Setting
 class Key(tkinter.Button):
     def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
@@ -26,6 +27,130 @@ class BlackKey(Key):
     def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
         super().__init__(master=master, name=name, setting=setting, midi=midi, **kargs)
         self.config(background="black")
+
+class CatPawPedalButton(tkinter.Frame):
+    """Sustain pedal button shaped like a cat paw print"""
+    def __init__(self, master=None, setting: Setting=None, **kargs):
+        super().__init__(master=master, **kargs)
+        self.setting = setting
+        self.is_pressed = False
+
+        # Draw paw print with canvas
+        self.canvas = Canvas(self)
+        self.canvas.config(highlightthickness=1)
+        self.canvas.config(highlightbackground="black")
+        self.canvas.pack(fill=tkinter.BOTH, expand=True)
+
+        self.canvas.bind('<Button-1>', self.on_press)
+        self.canvas.bind('<ButtonRelease-1>', self.on_release)
+        self.canvas.bind('<Configure>', self.on_configure)
+
+        self._draw_paw()
+
+    def _draw_paw(self):
+        self.canvas.delete("all")
+
+        width = self.canvas.winfo_width()
+        height = self.canvas.winfo_height()
+
+        if width <= 1 or height <= 1:
+            width = 100
+            height = 100
+
+        # Determine the color of paw print
+        color = self.setting.gui.KeyPushedColor if self.is_pressed else "white"
+        outline_color = "black"
+
+        # Large paw pad (Center)
+        pad_size = min(width, height) / 3
+        pad_rad = pad_size / 2
+        center_x = width / 2
+        center_y = height / 2
+
+        self.canvas.create_oval(
+            center_x - pad_rad,
+            center_y - pad_rad,
+            center_x + pad_rad,
+            center_y + pad_rad,
+            fill=color,
+            outline=None,
+            width=0
+        )
+        self.canvas.create_oval(
+            center_x + pad_size,
+            center_y + pad_size,
+            center_x,
+            center_y,
+            fill=color,
+            outline=None,
+            width=0
+        )
+        self.canvas.create_oval(
+            center_x,
+            center_y + pad_size,
+            center_x - pad_size,
+            center_y,
+            fill=color,
+            outline=None,
+            width=0
+        )
+
+
+        # Small paw pad (Left)
+        self.canvas.create_oval(
+            pad_rad,
+            pad_size,
+            0,
+            center_y + pad_rad,
+            fill=color,
+            outline=outline_color,
+            width=0
+        )
+
+        # Small paw pad (Left Top)
+        self.canvas.create_oval(
+            center_x - pad_rad / 2,
+            0,
+            pad_rad * 1.5,
+            pad_size,
+            fill=color,
+            outline=outline_color,
+            width=0
+        )
+
+        # Small paw pad (Right Top)
+        self.canvas.create_oval(
+            center_x + 1.5 * pad_rad,
+            0,
+            center_x + pad_rad / 2,
+            pad_size,
+            fill=color,
+            outline=outline_color,
+            width=0
+        )
+
+        # Small paw pad (Right)
+        self.canvas.create_oval(
+            center_x + pad_size * 1.5,
+            pad_size,
+            center_x + pad_size,
+            center_y + pad_rad,
+            fill=color,
+            outline=outline_color,
+            width=0
+        )
+
+    def on_press(self, event):
+        self.is_pressed = True
+        self._draw_paw()
+
+    def on_release(self, event):
+        self.is_pressed = False
+        self._draw_paw()
+
+    def on_configure(self, event):
+        """Redraw paw print when resizing button"""
+        self._draw_paw()
 
 class KeyBoard(tkinter.Frame):
 
@@ -61,7 +186,7 @@ class KeyBoard(tkinter.Frame):
         self.KEY_WIDTH = int(self.setting.gui.Width / self.get_white_key_num())
         self.KEY_HEIGHT = self.KEY_WIDTH * 5
         self.PEDAL_WIDTH = self.KEY_WIDTH * 3
-        self.PEDAL_HEIGHT = self.KEY_WIDTH
+        self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
         self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
         self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
 
@@ -71,7 +196,7 @@ class KeyBoard(tkinter.Frame):
         self.black_keys = [BlackKey(self, name=key, setting=setting, midi=self.midi) for octabe in self.BLACK_KEY_NAME for key in octabe]
         self.keys = self.white_keys + self.black_keys
 
-        self.sustain = tkinter.Button(self, activebackground=self.setting.gui.KeyPushedColor)
+        self.sustain = CatPawPedalButton(self, setting=setting)
 
         self.place_keyboard()
 
