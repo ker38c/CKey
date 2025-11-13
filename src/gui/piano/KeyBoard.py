@@ -152,6 +152,14 @@ class CatPawPedalButton(tkinter.Frame):
         """Redraw paw print when resizing button"""
         self._draw_paw()
 
+    def config(self, **kwargs):
+        """Override config to handle state changes"""
+        if 'state' in kwargs:
+            state = kwargs.pop('state')
+            self.is_pressed = (state == tkinter.ACTIVE)
+            self._draw_paw()
+        super().config(**kwargs)
+
 class KeyBoard(tkinter.Frame):
 
     WHITE_KEY_NAME = [
