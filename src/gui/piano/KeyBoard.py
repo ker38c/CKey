@@ -39,6 +39,7 @@ class CatPawPedalButton(tkinter.Frame):
         self.canvas = Canvas(self)
         self.canvas.config(highlightthickness=1)
         self.canvas.config(highlightbackground="black")
+        self.canvas.config(bg="white")
         self.canvas.pack(fill=tkinter.BOTH, expand=True)
 
         self.canvas.bind('<Button-1>', self.on_press)
