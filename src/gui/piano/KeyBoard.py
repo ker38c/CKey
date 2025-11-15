@@ -237,3 +237,19 @@ class KeyBoard(tkinter.Frame):
                 return key
         print("No such a key")
         return None
+
+    def set_key_state(self, name: str, state: str):
+        key = self.find_key(name)
+        if key is None:
+            return
+        try:
+            key.config(state=state)
+        except Exception as e:
+            print(f"Error setting key state for {name}: {e}")
+
+    def set_sustain(self, pressed: bool):
+        try:
+            state = tkinter.ACTIVE if pressed else tkinter.NORMAL
+            self.sustain.config(state=state)
+        except Exception as e:
+            print(f"Error setting sustain state: {e}")

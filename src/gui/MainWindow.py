@@ -6,6 +6,8 @@ from gui.MidiTab import MidiTab
 from gui.AboutTab import AboutTab
 from config.Setting import Setting
 from midi.MidiController import MidiController
+from gui.UiDispatcher import UiDispatcher
+
 class MainWindow():
     def __init__(self, setting: Setting, midi: MidiController):
         self.setting = setting
@@ -18,8 +20,12 @@ class MainWindow():
         self.notebook = tkinter.ttk.Notebook(self.root)
         self.notebook.pack(expand=True, fill="both", padx=10, pady=10)
 
+        # create UI dispatcher
+        self.dispatcher = UiDispatcher(self.root)
+        self.dispatcher.start()
+
         # create tabs
-        self.piano_tab = PianoTab(self.notebook, setting, midi)
+        self.piano_tab = PianoTab(self.notebook, setting, midi, dispatcher=self.dispatcher)
         self.midi_tab = MidiTab(self.notebook, midi)
         self.settings_tab = SettingsTab(self.notebook, setting)
         self.about_tab = AboutTab(self.notebook)
