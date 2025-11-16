@@ -7,6 +7,9 @@ def main():
     setting = Setting()
     midi = MidiController()
     window = MainWindow(setting, midi)
+
+    # Pass dispatcher to MidiController for UI updates
+    midi.dispatcher = window.dispatcher
     midi.init_keyboard(window.piano_tab.keyboard)
 
     # MIDI receive thread
