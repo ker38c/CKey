@@ -4,7 +4,6 @@ import time
 from threading import Lock
 from queue import Queue
 from gui.piano.KeyBoard import KeyBoard
-
 from enum import IntEnum
 
 class MidiDeviceInfo(IntEnum):
@@ -16,8 +15,9 @@ class MidiDeviceInfo(IntEnum):
     OPENED = 4
 
 class MidiController():
-    def __init__(self):
+    def __init__(self, dispatcher=None):
         pygame.midi.init()
+        self.dispatcher = dispatcher
         self.lock = Lock()
         self.event_queue = Queue()
         self.start = False
@@ -145,29 +145,28 @@ class MidiController():
         return self.NOTE_NAME[key_num]
 
     def note_on(self, key_name: str, velocity: str):
-        key = self.keyboard.find_key(self.get_key_name(key_name))
-        if key == "":
+        key_name_str = self.get_key_name(key_name)
+        if key_name_str == "":
             return
         if self.midiout is not None:
             self.midiout.note_on(note=key_name, velocity=velocity)
 
-        key.config(state=tkinter.ACTIVE)
+        self.dispatcher.post_to('keyboard', 'set_key_state', key_name_str, tkinter.ACTIVE)
 
     def note_off(self, key_name: str):
-        key = self.keyboard.find_key(self.get_key_name(key_name))
-        if key == "":
+        key_name_str = self.get_key_name(key_name)
+        if key_name_str == "":
             return
         if self.midiout is not None:
             self.midiout.note_off(note=key_name)
-        key.config(state=tkinter.NORMAL)
+
+        self.dispatcher.post_to('keyboard', 'set_key_state', key_name_str, tkinter.NORMAL)
 
     def sustain_change(self, status: str, value: str):
         if self.midiout is not None:
             self.midiout.write_short(status, 0x40, value)
-        if value > 0:
-            self.keyboard.sustain.config(state=tkinter.ACTIVE)
-        else:
-            self.keyboard.sustain.config(state=tkinter.NORMAL)
+
+        self.dispatcher.post_to('keyboard', 'set_sustain', value > 0)
 
     def add_key_event(self, key_name: str, is_note_on: bool, velocity: int = 100):
         # Find the MIDI note number for the key name

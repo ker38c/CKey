@@ -82,24 +82,71 @@ class FakeKeyboard:
             return ""
         return self._key
 
+    # Methods expected by UiDispatcher in the real KeyBoard
+    def set_key_state(self, name, state):
+        key = self.find_key(name)
+        if key == "":
+            return
+        key.config(state=state)
+
+    def set_sustain(self, pressed):
+        state = fake_tkinter.ACTIVE if pressed else fake_tkinter.NORMAL
+        self.sustain.config(state=state)
+
+
+# Simple Fake UiDispatcher for tests: register widgets and synchronously invoke posted methods
+class FakeUiDispatcher:
+    def __init__(self):
+        self._registry = {}
+        self.calls = []
+
+    def register(self, name, widget):
+        self._registry[name] = widget
+
+    def unregister(self, name):
+        self._registry.pop(name, None)
+
+    def post_to(self, name, method_name, *args, **kwargs):
+        # Record the call for assertions
+        self.calls.append((name, method_name, args, kwargs))
+        widget = self._registry.get(name)
+        if widget is None:
+            return
+        func = getattr(widget, method_name, None)
+        if func is None:
+            return
+        # Synchronously invoke to simulate immediate main-thread execution
+        return func(*args, **kwargs)
+
 class TestMidiController(unittest.TestCase):
     def setUp(self):
         # Ensure each test gets a fresh MidiController instance
         # Patch pygame.midi functions if needed
-        self.controller = MidiController()
+        self.fake_dispatcher = FakeUiDispatcher()
+        self.controller = MidiController(dispatcher=self.fake_dispatcher)
+    # --- get_key_name tests -------------------------------------------------
+    def test_get_key_name_returns_first_note(self):
+        # Arrange/Act
+        result = self.controller.get_key_name(0)
+        # Assert
+        self.assertEqual(result, self.controller.NOTE_NAME[0])
 
-    def test_get_key_name_valid_and_invalid(self):
-        # valid index
-        self.assertEqual(self.controller.get_key_name(0), self.controller.NOTE_NAME[0])
-        # another valid: find "C4"
+    def test_get_key_name_returns_C4_for_index(self):
+        # Arrange
         idx_c4 = self.controller.NOTE_NAME.index("C4")
-        self.assertEqual(self.controller.get_key_name(idx_c4), "C4")
-        # invalid low
+        # Act
+        result = self.controller.get_key_name(idx_c4)
+        # Assert
+        self.assertEqual(result, "C4")
+
+    def test_get_key_name_returns_empty_for_invalid_indices(self):
+        # Arrange/Act/Assert
         self.assertEqual(self.controller.get_key_name(-1), "")
-        # invalid high
         self.assertEqual(self.controller.get_key_name(128), "")
 
-    def test_add_key_event_enqueues_correct_event(self):
+    # --- add_key_event tests ------------------------------------------------
+    def test_add_key_event_enqueues_note_on(self):
+        # Arrange
         note_name = "C4"
         note_num = self.controller.NOTE_NAME.index(note_name)
         # ensure queue empty first
@@ -108,66 +155,85 @@ class TestMidiController(unittest.TestCase):
             self.fail("Queue should be empty at test start")
         except Empty:
             pass
-
+        # Act
         self.controller.add_key_event(note_name, True, 64)
+        # Assert
         event = self.controller.event_queue.get(timeout=1.0)
         expected = ([0x90, note_num, 64, 0], 0)
         self.assertEqual(event, expected)
 
-        # Test note off
+    def test_add_key_event_enqueues_note_off(self):
+        # Arrange
+        note_name = "C4"
+        note_num = self.controller.NOTE_NAME.index(note_name)
+        # Act
         self.controller.add_key_event(note_name, False, 0)
+        # Assert
         event_off = self.controller.event_queue.get(timeout=1.0)
         expected_off = ([0x80, note_num, 0, 0], 0)
         self.assertEqual(event_off, expected_off)
 
-    def test_handler_note_on_and_note_off(self):
+    # --- handler note on/off tests -----------------------------------------
+    def test_handler_note_on_updates_midiout_and_key_state(self):
+        # Arrange
         kb = FakeKeyboard()
         self.controller.keyboard = kb
-
-        # provide a mock midiout to capture calls
+        self.fake_dispatcher.register('keyboard', kb)
         midiout = mock.Mock()
         self.controller.midiout = midiout
-
         note_name = "C4"
         note_num = self.controller.NOTE_NAME.index(note_name)
         velocity = 77
-
-        # Note On event
         on_event = ([0x90, note_num, velocity, 0], 0)
+        # Act
         self.controller.handler(on_event)
-
+        # Assert
         midiout.note_on.assert_called_with(note=note_num, velocity=velocity)
         self.assertEqual(kb._key.last_state, fake_tkinter.ACTIVE)
 
-        # Note Off event
+    def test_handler_note_off_updates_midiout_and_key_state(self):
+        # Arrange
+        kb = FakeKeyboard()
+        self.controller.keyboard = kb
+        self.fake_dispatcher.register('keyboard', kb)
+        midiout = mock.Mock()
+        self.controller.midiout = midiout
+        note_name = "C4"
+        note_num = self.controller.NOTE_NAME.index(note_name)
         off_event = ([0x80, note_num, 0, 0], 0)
+        # Act
         self.controller.handler(off_event)
-
+        # Assert
         midiout.note_off.assert_called_with(note=note_num)
         self.assertEqual(kb._key.last_state, fake_tkinter.NORMAL)
 
-    def test_sustain_change(self):
+    # --- handler sustain tests --------------------------------------------
+    def test_handler_sustain_on_writes_midiout_and_updates_sustain(self):
+        # Arrange
         kb = FakeKeyboard()
         self.controller.keyboard = kb
-
+        self.fake_dispatcher.register('keyboard', kb)
         midiout = mock.Mock()
         self.controller.midiout = midiout
-
         status = 0xB0
-        # Sustain ON (value > 0)
         cc_on_event = ([status, 0x40, 127, 0], 0)
+        # Act
         self.controller.handler(cc_on_event)
-
+        # Assert
         midiout.write_short.assert_called_with(status, 0x40, 127)
         self.assertEqual(kb.sustain.last_state, fake_tkinter.ACTIVE)
 
-        midiout.reset_mock()
-        # Sustain OFF (value == 0)
+    def test_handler_sustain_off_writes_midiout_and_updates_sustain(self):
+        # Arrange
+        kb = FakeKeyboard()
+        self.controller.keyboard = kb
+        self.fake_dispatcher.register('keyboard', kb)
+        midiout = mock.Mock()
+        self.controller.midiout = midiout
+        status = 0xB0
         cc_off_event = ([status, 0x40, 0, 0], 0)
+        # Act
         self.controller.handler(cc_off_event)
-
+        # Assert
         midiout.write_short.assert_called_with(status, 0x40, 0)
         self.assertEqual(kb.sustain.last_state, fake_tkinter.NORMAL)
-
-if __name__ == "__main__":
-    unittest.main()
