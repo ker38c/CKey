@@ -10,14 +10,15 @@ def main():
 
     # Pass dispatcher to MidiController for UI updates
     midi.dispatcher = window.dispatcher
+    midi.handler.set_dispatcher(window.dispatcher)
     midi.init_keyboard(window.piano_tab.keyboard)
 
     # MIDI receive thread
-    midi_recv_thread = threading.Thread(target=midi.receive)
+    midi_recv_thread = threading.Thread(target=midi.receiver.run)
     midi_recv_thread.start()
 
-    # MIDI process thread
-    midi_proc_thread = threading.Thread(target=midi.process_event)
+    # MIDI process thread (handler thread)
+    midi_proc_thread = threading.Thread(target=midi.handler.run)
     midi_proc_thread.start()
 
     try:
