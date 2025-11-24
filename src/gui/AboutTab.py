@@ -2,6 +2,7 @@ import tkinter
 import tkinter.ttk
 import os
 import pygame
+import mido
 from version import __version__
 
 class AboutTab:
@@ -64,6 +65,31 @@ class AboutTab:
             font=("Helvetica", 10)
         )
         self.pygame_license_button.pack(pady=5)
+
+        # mido
+        self.mido_label = tkinter.Label(
+            self.frame,
+            text=f"Mido v{mido.version.__version__}",
+            font=("Helvetica", 10)
+        )
+        self.mido_label.pack(pady=2)
+
+        # mido URL
+        self.mido_url_label = tkinter.Label(
+            self.frame,
+            text="https://mido.readthedocs.io/",
+            font=("Helvetica", 10)
+        )
+        self.mido_url_label.pack(pady=2)
+
+        self.mido_license_button = tkinter.Button(
+            self.frame,
+            text="View License",
+            command=lambda: self.show_license_popup("Mido license", "docs/license/mido/LICENSE"),
+            font=("Helvetica", 10)
+        )
+        self.mido_license_button.pack(pady=5)
+
 
     def get_basedir(self):
         return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
