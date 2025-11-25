@@ -9,8 +9,9 @@ from midi.MidiController import MidiController
 from gui.UiDispatcher import UiDispatcher
 
 class MainWindow():
-    def __init__(self, setting: Setting, midi: MidiController):
+    def __init__(self, setting: Setting, midi: MidiController, file_player=None):
         self.setting = setting
+        self.file_player = file_player
         self.root = tkinter.Tk()
         self.root.title("CKey")
         try:
@@ -25,7 +26,7 @@ class MainWindow():
         self.dispatcher.start()
 
         # create tabs
-        self.piano_tab = PianoTab(self.notebook, setting, midi, dispatcher=self.dispatcher)
+        self.piano_tab = PianoTab(self.notebook, setting, midi, file_player, dispatcher=self.dispatcher)
         self.midi_tab = MidiTab(self.notebook, midi)
         self.settings_tab = SettingsTab(self.notebook, setting)
         self.about_tab = AboutTab(self.notebook)
