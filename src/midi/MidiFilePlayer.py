@@ -74,9 +74,8 @@ class MidiFilePlayer:
     def _play_file(self):
         """Play the currently configured file once or repeatedly while _playing/_loop are set."""
         while True:
-            with self.lock:
-                if self.get_end_flag() or not self._playing:
-                    break
+            if self._should_stop_playback():
+                break
 
             mid = self._load_midi()
             if mid is None:
@@ -84,62 +83,21 @@ class MidiFilePlayer:
 
             events, ticks_per_beat = self._collect_events(mid)
 
-            # playback state
             current_tempo = 500000
             prev_tick = 0
 
             for abs_tick, msg in events:
-                # stop if playback or system state changed
-                with self.lock:
-                    if not self._playing or self.get_end_flag():
-                        return
+                if self._should_stop_playback():
+                    return
 
                 delta_ticks = abs_tick - prev_tick
-                if delta_ticks > 0:
-                    try:
-                        seconds = mido.tick2second(delta_ticks, ticks_per_beat, current_tempo)
-                    except Exception:
-                        seconds = delta_ticks * 0.001
-                    if seconds > 0:
-                        time.sleep(seconds)
+                self._sleep_for_delta(delta_ticks, ticks_per_beat, current_tempo)
                 prev_tick = abs_tick
 
-                # handle tempo changes
-                if getattr(msg, 'type', None) == 'set_tempo':
-                    current_tempo = getattr(msg, 'tempo', current_tempo)
-                    continue
+                current_tempo = self._emit_message(msg, current_tempo)
 
-                # translate messages to event queue
-                if getattr(msg, 'type', None) in ('note_on', 'note_off'):
-                    note = getattr(msg, 'note', None)
-                    velocity = getattr(msg, 'velocity', 0)
-                    channel = getattr(msg, 'channel', 0)
-                    if note is None:
-                        continue
-                    if msg.type == 'note_off' or (msg.type == 'note_on' and velocity == 0):
-                        status = 0x80 | (channel & 0x0F)
-                        data1 = note
-                        data2 = 0
-                    else:
-                        status = 0x90 | (channel & 0x0F)
-                        data1 = note
-                        data2 = velocity
-                    self.event_queue.put(([status, data1, data2, 0], time.time()))
-
-                elif getattr(msg, 'type', None) == 'control_change':
-                    channel = getattr(msg, 'channel', 0)
-                    control = getattr(msg, 'control', 0)
-                    value = getattr(msg, 'value', 0)
-                    status = 0xB0 | (channel & 0x0F)
-                    self.event_queue.put(([status, control, value, 0], time.time()))
-
-            # finished one pass over the file
-            with self.lock:
-                if not self._loop:
-                    self._playing = False
-                    break
-                if not self._playing:
-                    break
+            if self._post_file_pass():
+                break
 
     def set_file(self, file_path: str):
         """Set the path to the MIDI file to play."""
@@ -165,3 +123,55 @@ class MidiFilePlayer:
     def is_playing(self) -> bool:
         with self.lock:
             return bool(self._playing)
+
+    def _should_stop_playback(self) -> bool:
+        with self.lock:
+            return self.get_end_flag() or (not self._playing)
+
+    def _sleep_for_delta(self, delta_ticks: int, ticks_per_beat: int, tempo: int) -> None:
+        if delta_ticks <= 0:
+            return
+        try:
+            seconds = mido.tick2second(delta_ticks, ticks_per_beat, tempo)
+        except Exception:
+            seconds = delta_ticks * 0.001
+        if seconds > 0:
+            time.sleep(seconds)
+
+    def _emit_message(self, msg, current_tempo: int) -> int:
+        msg_type = getattr(msg, 'type', None)
+        if msg_type == 'set_tempo':
+            return getattr(msg, 'tempo', current_tempo)
+
+        if msg_type in ('note_on', 'note_off'):
+            note = getattr(msg, 'note', None)
+            velocity = getattr(msg, 'velocity', 0)
+            channel = getattr(msg, 'channel', 0)
+            if note is None:
+                return current_tempo
+            if msg_type == 'note_off' or (msg_type == 'note_on' and velocity == 0):
+                status = 0x80 | (channel & 0x0F)
+                data1 = note
+                data2 = 0
+            else:
+                status = 0x90 | (channel & 0x0F)
+                data1 = note
+                data2 = velocity
+            self.event_queue.put(([status, data1, data2, 0], time.time()))
+            return current_tempo
+
+        if msg_type == 'control_change':
+            channel = getattr(msg, 'channel', 0)
+            control = getattr(msg, 'control', 0)
+            value = getattr(msg, 'value', 0)
+            status = 0xB0 | (channel & 0x0F)
+            self.event_queue.put(([status, control, value, 0], time.time()))
+        return current_tempo
+
+    def _post_file_pass(self) -> bool:
+        """Update loop/playback flags after one pass. Return True to break outer loop."""
+        with self.lock:
+            if not self._loop:
+                self._playing = False
+                return True
+            return not self._playing
