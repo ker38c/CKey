@@ -25,11 +25,17 @@ class PianoTab():
         self.btn_choose = tkinter.Button(controls_frame, text="Choose MIDI file", command=self._choose_file)
         self.btn_choose.grid(row=1, column=0, padx=4)
 
-        self.btn_play = tkinter.Button(controls_frame, text="Play", command=self._play_file)
+        self.btn_play = tkinter.Canvas(controls_frame, width=30, height=30, bg='SystemButtonFace', highlightthickness=0, relief='raised', borderwidth=2)
+        self.btn_play.create_polygon(10, 5, 10, 25, 25, 15, fill='black', outline='black', tags='play_icon')
         self.btn_play.grid(row=1, column=1, padx=4)
+        self.btn_play.bind('<Button-1>', lambda e: self._on_play_press(e))
+        self.btn_play.bind('<ButtonRelease-1>', lambda e: self._on_play_release(e))
 
-        self.btn_stop = tkinter.Button(controls_frame, text="Stop", command=self._stop_file)
+        self.btn_stop = tkinter.Canvas(controls_frame, width=30, height=30, bg='SystemButtonFace', highlightthickness=0, relief='raised', borderwidth=2)
+        self.btn_stop.create_rectangle(8, 8, 22, 22, fill='black', outline='black', tags='stop_icon')
         self.btn_stop.grid(row=1, column=2, padx=4)
+        self.btn_stop.bind('<Button-1>', lambda e: self._on_stop_press(e))
+        self.btn_stop.bind('<ButtonRelease-1>', lambda e: self._on_stop_release(e))
         # Register keyboard with dispatcher for name-based calls
         if dispatcher is not None:
             try:
@@ -68,3 +74,17 @@ class PianoTab():
                 self.file_player.stop()
             except Exception:
                 pass
+
+    def _on_play_press(self, event):
+        self.btn_play.config(relief='sunken')
+
+    def _on_play_release(self, event):
+        self.btn_play.config(relief='raised')
+        self._play_file()
+
+    def _on_stop_press(self, event):
+        self.btn_stop.config(relief='sunken')
+
+    def _on_stop_release(self, event):
+        self.btn_stop.config(relief='raised')
+        self._stop_file()
