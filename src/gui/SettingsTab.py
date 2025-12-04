@@ -44,8 +44,17 @@ class SettingsTab():
         self.label_color_box = tkinter.Label(self.frame, width=2, bg=setting.gui.KeyPushedColor)
         self.label_color_box.grid(row=3, column=2)
 
+        # MIDI file player toggle
+        self.label_midi_file = tkinter.Label(self.frame, text="Enable MIDI file player")
+        self.label_midi_file.grid(row=4, column=0)
+
+        self.var_enable_midi_file = tkinter.BooleanVar()
+        self.var_enable_midi_file.set(setting.gui.EnableMidiFile)
+        self.check_midi_file = tkinter.Checkbutton(self.frame, variable=self.var_enable_midi_file, command=self._on_enable_midi_file_changed)
+        self.check_midi_file.grid(row=4, column=1)
+
         self.button_apply = tkinter.Button(self.frame, text="Save", command=self.apply_setting)
-        self.button_apply.grid(row=4, column=1)
+        self.button_apply.grid(row=5, column=1)
 
     def apply_setting(self):
         self.setting.save_setting()
@@ -70,5 +79,11 @@ class SettingsTab():
         try:
             self.setting.gui.KeyPushedColor = self.text_key_pushed_color.get()
             self.label_color_box.config(bg=self.text_key_pushed_color.get())
+        except:
+            pass
+
+    def _on_enable_midi_file_changed(self):
+        try:
+            self.setting.gui.EnableMidiFile = self.var_enable_midi_file.get()
         except:
             pass
