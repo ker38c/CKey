@@ -1,6 +1,7 @@
 import tkinter
 import tkinter.ttk
 from tkinter import filedialog
+import os
 from gui.piano.KeyBoard import KeyBoard
 from config.Setting import Setting
 from midi.MidiController import MidiController
@@ -21,7 +22,7 @@ class PianoTab():
         self.controls_frame = tkinter.Frame(self.frame)
         self.controls_frame.grid(row=1, column=0, pady=8)
 
-        self.file_label = tkinter.Label(self.controls_frame, text="No file")
+        self.file_label = tkinter.Label(self.controls_frame, text="No file", width=40, anchor='w')
         self.file_label.grid(row=0, column=0, columnspan=3, sticky='w')
 
         self.btn_choose = tkinter.Button(self.controls_frame, text="Choose MIDI file", command=self._choose_file)
@@ -54,7 +55,8 @@ class PianoTab():
             path = filedialog.askopenfilename(filetypes=[("MIDI files", "*.mid;*.midi"), ("All files", "*")])
             if path:
                 self._selected_file = path
-                self.file_label.config(text=path)
+                filename = os.path.basename(path)
+                self.file_label.config(text=filename)
                 if self.file_player is not None:
                     try:
                         self.file_player.set_file(path)
