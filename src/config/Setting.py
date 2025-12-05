@@ -9,7 +9,8 @@ MIN_HEIGHT = 200
 MAX_HEIGHT = 4000
 DEFAULT_HEIGHT = 400
 
-DEFAULT_KEY_PUSHED_COLOR = "yellow"
+DEFAULT_KEY_PUSHED_COLOR = "lightblue"
+DEFAULT_ENABLE_MIDI_FILE = True
 
 def round(value, min_value, max_value):
     return max(min_value, min(value, max_value))
@@ -18,7 +19,8 @@ class GuiSetting():
     def __init__(self):
         self._width = 0
         self._height = 0
-        self._key_pushed_color = ""
+        self._key_pushed_color = DEFAULT_KEY_PUSHED_COLOR
+        self._enable_midi_file = DEFAULT_ENABLE_MIDI_FILE
 
     @property
     def Width(self):
@@ -61,6 +63,19 @@ class GuiSetting():
         # no rule yet
         self._key_pushed_color = value
 
+    @property
+    def EnableMidiFile(self):
+        return self._enable_midi_file
+
+    @EnableMidiFile.setter
+    def EnableMidiFile(self, value):
+        if isinstance(value, bool):
+            self._enable_midi_file = value
+        elif isinstance(value, str):
+            self._enable_midi_file = value.lower() in ('true', '1', 'yes')
+        else:
+            self._enable_midi_file = bool(value)
+
 
 class Setting():
     CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.ini")
@@ -78,7 +93,8 @@ class Setting():
         self.parser["GUI"] = {
             "Width": str(DEFAULT_WIDTH),
             "Height": str(DEFAULT_HEIGHT),
-            "KeyPushedColor": str(DEFAULT_KEY_PUSHED_COLOR)
+            "KeyPushedColor": str(DEFAULT_KEY_PUSHED_COLOR),
+            "EnableMidiFile": str(DEFAULT_ENABLE_MIDI_FILE)
         }
 
         with open(self.CONFIG_FILE, mode="w") as file:
@@ -90,10 +106,12 @@ class Setting():
         self.gui.Width = self.parser["GUI"]["Width"]
         self.gui.Height = self.parser["GUI"]["Height"]
         self.gui.KeyPushedColor = self.parser["GUI"]["KeyPushedColor"]
+        self.gui.EnableMidiFile = self.parser["GUI"].get("EnableMidiFile", str(DEFAULT_ENABLE_MIDI_FILE))
 
     def save_setting(self):
         with open(self.CONFIG_FILE, 'w') as file:
             self.parser["GUI"]["Width"] = str(self.gui.Width)
             self.parser["GUI"]["Height"] = str(self.gui.Height)
             self.parser["GUI"]["KeyPushedColor"] = str(self.gui.KeyPushedColor)
+            self.parser["GUI"]["EnableMidiFile"] = str(self.gui.EnableMidiFile)
             self.parser.write(file)

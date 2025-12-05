@@ -2,11 +2,21 @@ import threading
 from gui.MainWindow import MainWindow
 from config.Setting import Setting
 from midi.MidiController import MidiController
+from midi.MidiFilePlayer import MidiFilePlayer
 
 def main():
     setting = Setting()
     midi = MidiController()
-    window = MainWindow(setting, midi)
+    
+    # Create MidiFilePlayer for file playback (system start/end separate)
+    file_player = MidiFilePlayer(
+        event_queue=midi.event_queue,
+        lock=midi.lock,
+        start_flag_getter=lambda: midi.start,
+        end_flag_getter=lambda: midi.end
+    )
+    
+    window = MainWindow(setting, midi, file_player)
 
     # Pass dispatcher to MidiController for UI updates
     midi.dispatcher = window.dispatcher
@@ -21,6 +31,10 @@ def main():
     midi_proc_thread = threading.Thread(target=midi.handler.run)
     midi_proc_thread.start()
 
+    # MIDI file player thread
+    midi_file_thread = threading.Thread(target=file_player.run)
+    midi_file_thread.start()
+
     try:
         # gui
         window.start()
@@ -32,6 +46,8 @@ def main():
             midi.end = True
         midi_recv_thread.join(timeout=2.0)
         midi_proc_thread.join(timeout=2.0)
+        if midi_file_thread is not None:
+            midi_file_thread.join(timeout=2.0)
         print("CKey exit")
 
 
