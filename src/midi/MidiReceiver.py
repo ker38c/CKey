@@ -38,11 +38,14 @@ class MidiReceiver:
 
                 if self.midiin is not None:
                     if self.midiin.poll():
-                        recv = self.midiin.read(1)
+                        recv = self.midiin.read(100)
                         for event in recv:
                             self.event_queue.put(event)
-
-                time.sleep(0.001)
+                    else:
+                        # Only sleep when no events are available
+                        time.sleep(0.001)
+                else:
+                    time.sleep(0.001)
 
         finally:
             if self.midiin is not None:
