@@ -85,8 +85,8 @@ class TestGuiSettingInitialization:
         gui_setting = GuiSetting()
         
         # Assert
-        assert gui_setting.Width == 0
-        assert gui_setting.Height == 0
+        assert gui_setting.Width == DEFAULT_WIDTH
+        assert gui_setting.Height == DEFAULT_HEIGHT
         assert gui_setting.KeyPushedColor == DEFAULT_KEY_PUSHED_COLOR
         assert gui_setting.EnableMidiFile == DEFAULT_ENABLE_MIDI_FILE
 
