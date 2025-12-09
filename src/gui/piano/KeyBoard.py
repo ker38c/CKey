@@ -253,3 +253,27 @@ class KeyBoard(tkinter.Frame):
             self.sustain.config(state=state)
         except Exception as e:
             print(f"Error setting sustain state: {e}")
+
+    def resize_keyboard(self, width: int, height: int):
+        """Resize the keyboard with the given width and height
+
+        Args:
+            width (int): The new width of the keyboard (in pixels)
+            height (int): The new height of the keyboard (in pixels)
+        """
+        # Update the setting
+        self.setting.gui.Width = width
+
+        # Recalculate key dimensions
+        self.KEY_WIDTH = int(width / self.get_white_key_num())
+        self.KEY_HEIGHT = self.KEY_WIDTH * 5
+        self.PEDAL_WIDTH = self.KEY_WIDTH * 3
+        self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
+        self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
+        self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
+
+        # Update frame size
+        self.config(width=width, height=height)
+
+        # Reposition all keys
+        self.place_keyboard()

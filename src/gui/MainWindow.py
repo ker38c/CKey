@@ -28,7 +28,7 @@ class MainWindow():
         # create tabs
         self.piano_tab = PianoTab(self.notebook, setting, midi, file_player, dispatcher=self.dispatcher)
         self.midi_tab = MidiTab(self.notebook, midi)
-        self.settings_tab = SettingsTab(self.notebook, setting)
+        self.settings_tab = SettingsTab(self.notebook, setting, self.piano_tab.keyboard, self.piano_tab)
         self.about_tab = AboutTab(self.notebook)
         self.notebook.add(self.piano_tab.frame, text="Piano")
         self.notebook.add(self.midi_tab.frame, text="MIDI")

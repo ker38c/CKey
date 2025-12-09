@@ -101,9 +101,10 @@ class PianoTab():
         """Update the visibility of MIDI file controls based on settings"""
         try:
             if self.setting.gui.EnableMidiFile:
-                self.controls_frame.grid()
+                self.controls_frame.grid(row=1, column=0, pady=8)
             else:
                 self.controls_frame.grid_remove()
-        except:
+        except Exception as e:
+            print(f"Error updating MIDI file visibility: {e}")
             # If setting doesn't exist, show controls by default
-            self.controls_frame.grid()
+            self.controls_frame.grid(row=1, column=0, pady=8)
