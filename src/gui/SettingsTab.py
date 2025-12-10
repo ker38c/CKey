@@ -3,11 +3,12 @@ import tkinter.ttk
 from config.Setting import Setting
 
 class SettingsTab():
-    def __init__(self, root: tkinter.ttk.Notebook, setting: Setting, keyboard, piano_tab):
+    def __init__(self, root: tkinter.ttk.Notebook, setting: Setting, keyboard, piano_tab, main_window):
         self.frame = tkinter.Frame(root)
         self.setting = setting
         self.keyboard = keyboard
         self.piano_tab = piano_tab
+        self.main_window = main_window
 
         self.label_window = tkinter.Label(self.frame, text="Window settings")
         self.label_window.grid(row=0, column=0)
@@ -67,11 +68,12 @@ class SettingsTab():
 
     def apply_setting(self):
         self.setting.save_setting()
-        # Apply keyboard size changes if keyboard is available
+        # Apply window size changes
+        self.main_window.resize(self.setting.gui.Width, self.setting.gui.Height)
+        # Apply keyboard size changes
         self.keyboard.resize_keyboard(self.setting.gui.Width, self.setting.gui.Height)
         # Update MIDI file controls visibility
         self.piano_tab._update_midi_file_visibility()
-
 
     def _on_width_key(self, event):
         try:
