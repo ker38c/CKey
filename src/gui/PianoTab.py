@@ -56,7 +56,6 @@ class PianoTab():
     def resize_keyboard(self, width: int, height: int):
         """Resize the keyboard based on window dimensions."""
         self.keyboard.resize_keyboard(width, height)
-        self.keyboard_frame.config(width=width, height=height)
 
     def _choose_file(self):
         try:

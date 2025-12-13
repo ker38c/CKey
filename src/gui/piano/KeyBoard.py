@@ -188,18 +188,8 @@ class KeyBoard(tkinter.Frame):
     def __init__(self, master=None, setting: Setting=None, midi=None, **kargs):
         super().__init__(master=master, **kargs)
 
-        # Resize frame to total keyboard width
         self.setting = setting
         self.midi = midi
-
-        self.KEY_WIDTH = int(self.setting.gui.Width / self.get_white_key_num())
-        self.KEY_HEIGHT = self.KEY_WIDTH * 5
-        self.PEDAL_WIDTH = self.KEY_WIDTH * 3
-        self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
-        self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
-        self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
-
-        self.config(width=self.KEY_WIDTH * self.get_white_key_num(), height=self.KEY_HEIGHT + self.PEDAL_HEIGHT)
 
         self.white_keys = [WhiteKey(self, name=key, setting=setting, midi=self.midi) for octabe in self.WHITE_KEY_NAME for key in octabe]
         self.black_keys = [BlackKey(self, name=key, setting=setting, midi=self.midi) for octabe in self.BLACK_KEY_NAME for key in octabe]
@@ -207,7 +197,7 @@ class KeyBoard(tkinter.Frame):
 
         self.sustain = CatPawPedalButton(self, setting=setting)
 
-        self.place_keyboard()
+        self.resize_keyboard(self.setting.gui.Width, self.setting.gui.Height)
 
     def get_white_key_num(self)->int:
         num_white_key = 0
@@ -271,9 +261,11 @@ class KeyBoard(tkinter.Frame):
         self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
         self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
         self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
+        self.width = width
+        self.height = self.KEY_HEIGHT + self.PEDAL_HEIGHT
 
         # Update frame size
-        self.config(width=width, height=height)
+        self.config(width=self.width, height=self.height)
 
         # Reposition all keys
         self.place_keyboard()
