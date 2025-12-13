@@ -10,8 +10,11 @@ class PianoTab():
     def __init__(self, root: tkinter.ttk.Notebook, setting: Setting, midi: MidiController, file_player=None, dispatcher=None):
         self.frame = tkinter.Frame(root)
 
-        self.keyboard = KeyBoard(master=self.frame, setting=setting, midi=midi)
-        self.keyboard.grid(row=0, column=0)
+        self.keyboard_frame = tkinter.Frame(self.frame)
+        self.keyboard_frame.grid(row=0, column=0)
+
+        self.keyboard = KeyBoard(master=self.keyboard_frame, setting=setting, midi=midi)
+        self.keyboard.pack(fill=tkinter.BOTH, expand=True)
 
         # File playback controls placed under the keyboard
         self._selected_file = None
@@ -49,6 +52,11 @@ class PianoTab():
                 dispatcher.register('keyboard', self.keyboard)
             except Exception:
                 pass
+
+    def resize_keyboard(self, width: int, height: int):
+        """Resize the keyboard based on window dimensions."""
+        self.keyboard.resize_keyboard(width, height)
+        self.keyboard_frame.config(width=width, height=height)
 
     def _choose_file(self):
         try:

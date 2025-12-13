@@ -44,7 +44,7 @@ class MainWindow():
     def apply_window_size(self, width: int, height: int):
         """Apply window size changes to main window and keyboard."""
         self.resize(width, height)
-        self.piano_tab.keyboard.resize_keyboard(width, height)
+        self.piano_tab.resize_keyboard(width, height)
 
     def update_midi_file_visibility(self):
         """Update MIDI file controls visibility."""
