@@ -48,7 +48,7 @@ class MainWindow():
 
     def update_midi_file_visibility(self):
         """Update MIDI file controls visibility."""
-        self.piano_tab._update_midi_file_visibility()
+        self.piano_tab.update_midi_file_visibility()
 
     def start(self):
         self.root.mainloop()
