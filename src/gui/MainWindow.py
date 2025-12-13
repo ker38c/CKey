@@ -28,7 +28,7 @@ class MainWindow():
         # create tabs
         self.piano_tab = PianoTab(self.notebook, setting, midi, file_player, dispatcher=self.dispatcher)
         self.midi_tab = MidiTab(self.notebook, midi)
-        self.settings_tab = SettingsTab(self.notebook, setting)
+        self.settings_tab = SettingsTab(self.notebook, setting, self)
         self.about_tab = AboutTab(self.notebook)
         self.notebook.add(self.piano_tab.frame, text="Piano")
         self.notebook.add(self.midi_tab.frame, text="MIDI")
@@ -36,6 +36,19 @@ class MainWindow():
         self.notebook.add(self.about_tab.frame, text="About")
 
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+
+    def resize(self, width: int, height: int):
+        """Resize the main window."""
+        self.root.geometry(f"{width}x{height}")
+
+    def apply_window_size(self, width: int, height: int):
+        """Apply window size changes to main window and keyboard."""
+        self.resize(width, height)
+        self.piano_tab.resize_keyboard(width, height)
+
+    def update_midi_file_visibility(self):
+        """Update MIDI file controls visibility."""
+        self.piano_tab.update_midi_file_visibility()
 
     def start(self):
         self.root.mainloop()

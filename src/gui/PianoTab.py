@@ -10,8 +10,11 @@ class PianoTab():
     def __init__(self, root: tkinter.ttk.Notebook, setting: Setting, midi: MidiController, file_player=None, dispatcher=None):
         self.frame = tkinter.Frame(root)
 
-        self.keyboard = KeyBoard(master=self.frame, setting=setting, midi=midi)
-        self.keyboard.grid(row=0, column=0)
+        self.keyboard_frame = tkinter.Frame(self.frame)
+        self.keyboard_frame.grid(row=0, column=0)
+
+        self.keyboard = KeyBoard(master=self.keyboard_frame, setting=setting, midi=midi)
+        self.keyboard.pack(fill=tkinter.BOTH, expand=True)
 
         # File playback controls placed under the keyboard
         self._selected_file = None
@@ -41,7 +44,7 @@ class PianoTab():
         self.btn_stop.bind('<ButtonRelease-1>', lambda e: self._on_stop_release(e))
 
         # Apply initial visibility based on settings
-        self._update_midi_file_visibility()
+        self.update_midi_file_visibility()
 
         # Register keyboard with dispatcher for name-based calls
         if dispatcher is not None:
@@ -49,6 +52,22 @@ class PianoTab():
                 dispatcher.register('keyboard', self.keyboard)
             except Exception:
                 pass
+
+    def resize_keyboard(self, width: int, height: int):
+        """Resize the keyboard based on window dimensions."""
+        self.keyboard.resize_keyboard(width, height)
+
+    def update_midi_file_visibility(self):
+        """Update the visibility of MIDI file controls based on settings"""
+        try:
+            if self.setting.gui.EnableMidiFile:
+                self.controls_frame.grid(row=1, column=0, pady=8)
+            else:
+                self.controls_frame.grid_remove()
+        except Exception as e:
+            print(f"Error updating MIDI file visibility: {e}")
+            # If setting doesn't exist, show controls by default
+            self.controls_frame.grid(row=1, column=0, pady=8)
 
     def _choose_file(self):
         try:
@@ -96,14 +115,3 @@ class PianoTab():
     def _on_stop_release(self, event):
         self.btn_stop.config(relief='raised')
         self._stop_file()
-
-    def _update_midi_file_visibility(self):
-        """Update the visibility of MIDI file controls based on settings"""
-        try:
-            if self.setting.gui.EnableMidiFile:
-                self.controls_frame.grid()
-            else:
-                self.controls_frame.grid_remove()
-        except:
-            # If setting doesn't exist, show controls by default
-            self.controls_frame.grid()

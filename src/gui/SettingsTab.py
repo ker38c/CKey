@@ -3,9 +3,10 @@ import tkinter.ttk
 from config.Setting import Setting
 
 class SettingsTab():
-    def __init__(self, root: tkinter.ttk.Notebook, setting: Setting):
+    def __init__(self, root: tkinter.ttk.Notebook, setting: Setting, main_window):
         self.frame = tkinter.Frame(root)
         self.setting = setting
+        self.main_window = main_window
 
         self.label_window = tkinter.Label(self.frame, text="Window settings")
         self.label_window.grid(row=0, column=0)
@@ -53,11 +54,22 @@ class SettingsTab():
         self.check_midi_file = tkinter.Checkbutton(self.frame, variable=self.var_enable_midi_file, command=self._on_enable_midi_file_changed)
         self.check_midi_file.grid(row=4, column=1)
 
-        self.button_apply = tkinter.Button(self.frame, text="Save", command=self.apply_setting)
+        self.button_apply = tkinter.Button(self.frame, text="Save", command=self._on_save_button_click)
         self.button_apply.grid(row=5, column=1)
+
+    def _on_save_button_click(self):
+        self.entry_width.event_generate("<FocusOut>")
+        self.entry_height.event_generate("<FocusOut>")
+        self.entry_key_pushed_color.event_generate("<FocusOut>")
+
+        self.apply_setting()
 
     def apply_setting(self):
         self.setting.save_setting()
+        # Apply window size changes
+        self.main_window.apply_window_size(self.setting.gui.Width, self.setting.gui.Height)
+        # Update MIDI file controls visibility
+        self.main_window.update_midi_file_visibility()
 
     def _on_width_key(self, event):
         try:

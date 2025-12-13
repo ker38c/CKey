@@ -17,8 +17,8 @@ def round(value, min_value, max_value):
 
 class GuiSetting():
     def __init__(self):
-        self._width = 0
-        self._height = 0
+        self._width = DEFAULT_WIDTH
+        self._height = DEFAULT_HEIGHT
         self._key_pushed_color = DEFAULT_KEY_PUSHED_COLOR
         self._enable_midi_file = DEFAULT_ENABLE_MIDI_FILE
 
