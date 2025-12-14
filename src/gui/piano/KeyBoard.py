@@ -70,21 +70,36 @@ class KeyBoard(tkinter.Frame):
         print("No such a key")
         return None
 
+    def _safe_configure_key(self, key, state: str, key_name: str = None) -> bool:
+        """Safely configure a key state with error handling
+        
+        Args:
+            key: The key widget to configure
+            state (str): The state to set
+            key_name (str): Optional name for error message
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            key.config(state=state)
+            return True
+        except Exception as e:
+            if key_name:
+                print(f"Error setting {key_name} state: {e}")
+            else:
+                print(f"Error configuring key state: {e}")
+            return False
+
     def set_key_state(self, name: str, state: str):
         key = self.find_key(name)
         if key is None:
             return
-        try:
-            key.config(state=state)
-        except Exception as e:
-            print(f"Error setting key state for {name}: {e}")
+        self._safe_configure_key(key, state, key_name=name)
 
     def set_sustain(self, pressed: bool):
-        try:
-            state = tkinter.ACTIVE if pressed else tkinter.NORMAL
-            self.sustain.config(state=state)
-        except Exception as e:
-            print(f"Error setting sustain state: {e}")
+        state = tkinter.ACTIVE if pressed else tkinter.NORMAL
+        self._safe_configure_key(self.sustain, state, key_name="sustain")
 
     def resize_keyboard(self, width: int, height: int):
         """Resize the keyboard with the given width and height
