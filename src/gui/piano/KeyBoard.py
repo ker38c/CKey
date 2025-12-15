@@ -47,20 +47,6 @@ class KeyBoard(tkinter.Frame):
             num_white_key += len(keys)
         return num_white_key
 
-    def place_keyboard(self):
-        # Place white key
-        for i, key in enumerate(self.white_keys):
-            key.place(x=i * self.KEY_WIDTH, y=0, width=self.KEY_WIDTH, height=self.KEY_HEIGHT)
-
-        # Place black key
-        for i, key in enumerate(self.black_keys):
-            if key.name == "":
-                continue
-            key.place(x=i * self.KEY_WIDTH + self.BLACK_KEY_WIDTH * 1.5, y=0, width=self.BLACK_KEY_WIDTH, height=self.BLACK_KEY_HEIGHT)
-
-        # Place sustain pedal
-        self.sustain.place(x=self.setting.gui.Width / 2, y=self.KEY_HEIGHT, width=self.PEDAL_WIDTH, height=self.PEDAL_HEIGHT)
-
     def find_key(self, name: str)->Key:
         if name == "":
             return None
@@ -101,17 +87,9 @@ class KeyBoard(tkinter.Frame):
         state = tkinter.ACTIVE if pressed else tkinter.NORMAL
         self._safe_configure_key(self.sustain, state, key_name="sustain")
 
-    def resize_keyboard(self, width: int, height: int):
-        """Resize the keyboard with the given width and height
-
-        Args:
-            width (int): The new width of the keyboard (in pixels)
-            height (int): The new height of the keyboard (in pixels)
-        """
-        # Update the setting
+    def _calculate_dimensions(self, width: int):
+        """Calculate and store key and pedal dimensions based on width."""
         self.setting.gui.Width = width
-
-        # Recalculate key dimensions
         self.KEY_WIDTH = int(width / self.get_white_key_num())
         self.KEY_HEIGHT = self.KEY_WIDTH * 5
         self.PEDAL_WIDTH = self.KEY_WIDTH * 3
@@ -121,8 +99,32 @@ class KeyBoard(tkinter.Frame):
         self.width = width
         self.height = self.KEY_HEIGHT + self.PEDAL_HEIGHT
 
-        # Update frame size
+    def _update_frame_size(self):
+        """Apply calculated dimensions to the frame."""
         self.config(width=self.width, height=self.height)
 
-        # Reposition all keys
-        self.place_keyboard()
+    def _place_keyboard(self):
+        # Place white key
+        for i, key in enumerate(self.white_keys):
+            key.place(x=i * self.KEY_WIDTH, y=0, width=self.KEY_WIDTH, height=self.KEY_HEIGHT)
+
+        # Place black key
+        for i, key in enumerate(self.black_keys):
+            if key.name == "":
+                continue
+            key.place(x=i * self.KEY_WIDTH + self.BLACK_KEY_WIDTH * 1.5, y=0, width=self.BLACK_KEY_WIDTH, height=self.BLACK_KEY_HEIGHT)
+
+        # Place sustain pedal
+        self.sustain.place(x=self.setting.gui.Width / 2, y=self.KEY_HEIGHT, width=self.PEDAL_WIDTH, height=self.PEDAL_HEIGHT)
+
+    def resize_keyboard(self, width: int, height: int):
+        """Resize the keyboard with the given width and height
+
+        Args:
+            width (int): The new width of the keyboard (in pixels)
+            height (int): The new height of the keyboard (in pixels)
+            Note: height is currently unused; dimensions derive from width.
+        """
+        self._calculate_dimensions(width)
+        self._update_frame_size()
+        self._place_keyboard()
