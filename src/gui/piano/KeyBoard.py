@@ -1,165 +1,7 @@
 import tkinter
-from tkinter import Canvas
 from config.Setting import Setting
-class Key(tkinter.Button):
-    def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
-        super().__init__(master=master, **kargs)
-        self.config(activebackground=setting.gui.KeyPushedColor)
-        self.name = name
-        self.midi = midi
-        self.bind('<Button-1>', self.on_press)
-        self.bind('<ButtonRelease-1>', self.on_release)
-
-    def on_press(self, event):
-        if self.midi:
-            self.midi.add_key_event(self.name, True)
-
-    def on_release(self, event):
-        if self.midi:
-            self.midi.add_key_event(self.name, False)
-
-class WhiteKey(Key):
-    def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
-        super().__init__(master=master, name=name, setting=setting, midi=midi, **kargs)
-        self.config(background="white")
-
-class BlackKey(Key):
-    def __init__(self, master=None, name: str="", setting: Setting=None, midi=None, **kargs):
-        super().__init__(master=master, name=name, setting=setting, midi=midi, **kargs)
-        self.config(background="black")
-
-class CatPawPedalButton(tkinter.Frame):
-    """Sustain pedal button shaped like a cat paw print"""
-    def __init__(self, master=None, setting: Setting=None, **kargs):
-        super().__init__(master=master, **kargs)
-        self.setting = setting
-        self.is_pressed = False
-
-        # Draw paw print with canvas
-        self.canvas = Canvas(self)
-        self.canvas.config(highlightthickness=1)
-        self.canvas.config(highlightbackground="black")
-        self.canvas.config(bg="white")
-        self.canvas.pack(fill=tkinter.BOTH, expand=True)
-
-        self.canvas.bind('<Button-1>', self.on_press)
-        self.canvas.bind('<ButtonRelease-1>', self.on_release)
-        self.canvas.bind('<Configure>', self.on_configure)
-
-        self._draw_paw()
-
-    def _draw_paw(self):
-        self.canvas.delete("all")
-
-        width = self.canvas.winfo_width()
-        height = self.canvas.winfo_height()
-
-        if width <= 1 or height <= 1:
-            width = 100
-            height = 100
-
-        # Determine the color of paw print
-        color = self.setting.gui.KeyPushedColor if self.is_pressed else "white"
-        outline_color = "black"
-
-        # Large paw pad (Center)
-        pad_size = min(width, height) / 3
-        pad_rad = pad_size / 2
-        center_x = width / 2
-        center_y = height / 2
-
-        self.canvas.create_oval(
-            center_x - pad_rad,
-            center_y - pad_rad,
-            center_x + pad_rad,
-            center_y + pad_rad,
-            fill=color,
-            outline=None,
-            width=0
-        )
-        self.canvas.create_oval(
-            center_x + pad_size,
-            center_y + pad_size,
-            center_x,
-            center_y,
-            fill=color,
-            outline=None,
-            width=0
-        )
-        self.canvas.create_oval(
-            center_x,
-            center_y + pad_size,
-            center_x - pad_size,
-            center_y,
-            fill=color,
-            outline=None,
-            width=0
-        )
-
-
-        # Small paw pad (Left)
-        self.canvas.create_oval(
-            pad_rad,
-            pad_size,
-            0,
-            center_y + pad_rad,
-            fill=color,
-            outline=outline_color,
-            width=0
-        )
-
-        # Small paw pad (Left Top)
-        self.canvas.create_oval(
-            center_x - pad_rad / 2,
-            0,
-            pad_rad * 1.5,
-            pad_size,
-            fill=color,
-            outline=outline_color,
-            width=0
-        )
-
-        # Small paw pad (Right Top)
-        self.canvas.create_oval(
-            center_x + 1.5 * pad_rad,
-            0,
-            center_x + pad_rad / 2,
-            pad_size,
-            fill=color,
-            outline=outline_color,
-            width=0
-        )
-
-        # Small paw pad (Right)
-        self.canvas.create_oval(
-            center_x + pad_size * 1.5,
-            pad_size,
-            center_x + pad_size,
-            center_y + pad_rad,
-            fill=color,
-            outline=outline_color,
-            width=0
-        )
-
-    def on_press(self, event):
-        self.is_pressed = True
-        self._draw_paw()
-
-    def on_release(self, event):
-        self.is_pressed = False
-        self._draw_paw()
-
-    def on_configure(self, event):
-        """Redraw paw print when resizing button"""
-        self._draw_paw()
-
-    def config(self, **kwargs):
-        """Override config to handle state changes"""
-        if 'state' in kwargs:
-            state = kwargs.pop('state')
-            self.is_pressed = (state == tkinter.ACTIVE)
-            self._draw_paw()
-        super().config(**kwargs)
+from .Key import Key, WhiteKey, BlackKey
+from .CatPawPedalButton import CatPawPedalButton
 
 class KeyBoard(tkinter.Frame):
 
@@ -205,7 +47,63 @@ class KeyBoard(tkinter.Frame):
             num_white_key += len(keys)
         return num_white_key
 
-    def place_keyboard(self):
+    def find_key(self, name: str)->Key:
+        if name == "":
+            return None
+        for key in self.keys:
+            if name == key.name:
+                return key
+        print("No such a key")
+        return None
+
+    def _safe_configure_key(self, key, state: str, key_name: str = None) -> bool:
+        """Safely configure a key state with error handling
+        
+        Args:
+            key: The key widget to configure
+            state (str): The state to set
+            key_name (str): Optional name for error message
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            key.config(state=state)
+            return True
+        except Exception as e:
+            if key_name:
+                print(f"Error setting {key_name} state: {e}")
+            else:
+                print(f"Error configuring key state: {e}")
+            return False
+
+    def set_key_state(self, name: str, state: str):
+        key = self.find_key(name)
+        if key is None:
+            return
+        self._safe_configure_key(key, state, key_name=name)
+
+    def set_sustain(self, pressed: bool):
+        state = tkinter.ACTIVE if pressed else tkinter.NORMAL
+        self._safe_configure_key(self.sustain, state, key_name="sustain")
+
+    def _calculate_dimensions(self, width: int):
+        """Calculate and store key and pedal dimensions based on width."""
+        self.setting.gui.Width = width
+        self.KEY_WIDTH = int(width / self.get_white_key_num())
+        self.KEY_HEIGHT = self.KEY_WIDTH * 5
+        self.PEDAL_WIDTH = self.KEY_WIDTH * 3
+        self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
+        self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
+        self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
+        self.width = width
+        self.height = self.KEY_HEIGHT + self.PEDAL_HEIGHT
+
+    def _update_frame_size(self):
+        """Apply calculated dimensions to the frame."""
+        self.config(width=self.width, height=self.height)
+
+    def _place_keyboard(self):
         # Place white key
         for i, key in enumerate(self.white_keys):
             key.place(x=i * self.KEY_WIDTH, y=0, width=self.KEY_WIDTH, height=self.KEY_HEIGHT)
@@ -219,53 +117,14 @@ class KeyBoard(tkinter.Frame):
         # Place sustain pedal
         self.sustain.place(x=self.setting.gui.Width / 2, y=self.KEY_HEIGHT, width=self.PEDAL_WIDTH, height=self.PEDAL_HEIGHT)
 
-    def find_key(self, name: str)->Key:
-        if name == "":
-            return None
-        for key in self.keys:
-            if name == key.name:
-                return key
-        print("No such a key")
-        return None
-
-    def set_key_state(self, name: str, state: str):
-        key = self.find_key(name)
-        if key is None:
-            return
-        try:
-            key.config(state=state)
-        except Exception as e:
-            print(f"Error setting key state for {name}: {e}")
-
-    def set_sustain(self, pressed: bool):
-        try:
-            state = tkinter.ACTIVE if pressed else tkinter.NORMAL
-            self.sustain.config(state=state)
-        except Exception as e:
-            print(f"Error setting sustain state: {e}")
-
     def resize_keyboard(self, width: int, height: int):
         """Resize the keyboard with the given width and height
 
         Args:
             width (int): The new width of the keyboard (in pixels)
             height (int): The new height of the keyboard (in pixels)
+            Note: height is currently unused; dimensions derive from width.
         """
-        # Update the setting
-        self.setting.gui.Width = width
-
-        # Recalculate key dimensions
-        self.KEY_WIDTH = int(width / self.get_white_key_num())
-        self.KEY_HEIGHT = self.KEY_WIDTH * 5
-        self.PEDAL_WIDTH = self.KEY_WIDTH * 3
-        self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
-        self.BLACK_KEY_WIDTH = self.KEY_WIDTH / 2
-        self.BLACK_KEY_HEIGHT = self.KEY_HEIGHT * 0.6
-        self.width = width
-        self.height = self.KEY_HEIGHT + self.PEDAL_HEIGHT
-
-        # Update frame size
-        self.config(width=self.width, height=self.height)
-
-        # Reposition all keys
-        self.place_keyboard()
+        self._calculate_dimensions(width)
+        self._update_frame_size()
+        self._place_keyboard()
