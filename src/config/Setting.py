@@ -21,6 +21,7 @@ class GuiSetting():
         self._height = DEFAULT_HEIGHT
         self._key_pushed_color = DEFAULT_KEY_PUSHED_COLOR
         self._enable_midi_file = DEFAULT_ENABLE_MIDI_FILE
+        self._image_path = ""
 
     @property
     def Width(self):
@@ -76,6 +77,50 @@ class GuiSetting():
         else:
             self._enable_midi_file = bool(value)
 
+    @property
+    def ImagePath(self):
+        return self._image_path
+
+    @ImagePath.setter
+    def ImagePath(self, value):
+        if value is None:
+            self._image_path = ""
+            return
+
+        if isinstance(value, bytes):
+            self._image_path = self._decode_path(value)
+        else:
+            self._image_path = str(value)
+
+    def _decode_path(self, value: bytes) -> str:
+        """Decode bytes path from UTF-8, Shift-JIS (cp932), or fallback.
+
+        Args:
+            value (bytes): Path bytes to decode
+
+        Returns:
+            str: Decoded path string, empty string on complete failure
+        """
+        # Try UTF-8 first
+        try:
+            return value.decode('utf-8')
+        except Exception:
+            pass
+
+        # Try Shift-JIS (cp932) on Windows
+        try:
+            return value.decode('cp932')
+        except Exception:
+            pass
+
+        # Fallback: ignore problematic bytes
+        try:
+            return value.decode(errors='ignore')
+        except Exception:
+            pass
+
+        # Complete failure: return empty string
+        return ""
 
 class Setting():
     CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.ini")
@@ -94,10 +139,11 @@ class Setting():
             "Width": str(DEFAULT_WIDTH),
             "Height": str(DEFAULT_HEIGHT),
             "KeyPushedColor": str(DEFAULT_KEY_PUSHED_COLOR),
-            "EnableMidiFile": str(DEFAULT_ENABLE_MIDI_FILE)
+            "EnableMidiFile": str(DEFAULT_ENABLE_MIDI_FILE),
+            "ImagePath": ""
         }
 
-        with open(self.CONFIG_FILE, mode="w") as file:
+        with open(self.CONFIG_FILE, mode="w", encoding="utf-8") as file:
             self.parser.write(file)
 
     def load_setting(self):
@@ -107,11 +153,13 @@ class Setting():
         self.gui.Height = self.parser["GUI"]["Height"]
         self.gui.KeyPushedColor = self.parser["GUI"]["KeyPushedColor"]
         self.gui.EnableMidiFile = self.parser["GUI"].get("EnableMidiFile", str(DEFAULT_ENABLE_MIDI_FILE))
+        self.gui.ImagePath = self.parser["GUI"].get("ImagePath", "")
 
     def save_setting(self):
-        with open(self.CONFIG_FILE, 'w') as file:
+        with open(self.CONFIG_FILE, 'w', encoding='utf-8') as file:
             self.parser["GUI"]["Width"] = str(self.gui.Width)
             self.parser["GUI"]["Height"] = str(self.gui.Height)
             self.parser["GUI"]["KeyPushedColor"] = str(self.gui.KeyPushedColor)
             self.parser["GUI"]["EnableMidiFile"] = str(self.gui.EnableMidiFile)
+            self.parser["GUI"]["ImagePath"] = self.gui.ImagePath
             self.parser.write(file)
