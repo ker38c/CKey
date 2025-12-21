@@ -55,3 +55,9 @@ class MainWindow():
 
     def on_tab_changed(self, event):
         self.root.focus_set()
+        try:
+            current = self.notebook.nametowidget(self.notebook.select())
+            if current is self.piano_tab.frame:
+                self.piano_tab.refresh_image()
+        except Exception:
+            pass
