@@ -11,6 +11,7 @@ DEFAULT_HEIGHT = 400
 
 DEFAULT_KEY_PUSHED_COLOR = "lightblue"
 DEFAULT_ENABLE_MIDI_FILE = True
+DEFAULT_SHOW_IMAGE_FRAME = True
 
 def round(value, min_value, max_value):
     return max(min_value, min(value, max_value))
@@ -22,6 +23,7 @@ class GuiSetting():
         self._key_pushed_color = DEFAULT_KEY_PUSHED_COLOR
         self._enable_midi_file = DEFAULT_ENABLE_MIDI_FILE
         self._image_path = ""
+        self._show_image_frame = DEFAULT_SHOW_IMAGE_FRAME
 
     @property
     def Width(self):
@@ -76,6 +78,19 @@ class GuiSetting():
             self._enable_midi_file = value.lower() in ('true', '1', 'yes')
         else:
             self._enable_midi_file = bool(value)
+
+    @property
+    def ShowImageFrame(self):
+        return self._show_image_frame
+
+    @ShowImageFrame.setter
+    def ShowImageFrame(self, value):
+        if isinstance(value, bool):
+            self._show_image_frame = value
+        elif isinstance(value, str):
+            self._show_image_frame = value.lower() in ('true', '1', 'yes')
+        else:
+            self._show_image_frame = bool(value)
 
     @property
     def ImagePath(self):
@@ -140,7 +155,8 @@ class Setting():
             "Height": str(DEFAULT_HEIGHT),
             "KeyPushedColor": str(DEFAULT_KEY_PUSHED_COLOR),
             "EnableMidiFile": str(DEFAULT_ENABLE_MIDI_FILE),
-            "ImagePath": ""
+            "ImagePath": "",
+            "ShowImageFrame": str(DEFAULT_SHOW_IMAGE_FRAME)
         }
 
         with open(self.CONFIG_FILE, mode="w", encoding="utf-8") as file:
@@ -154,6 +170,7 @@ class Setting():
         self.gui.KeyPushedColor = self.parser["GUI"]["KeyPushedColor"]
         self.gui.EnableMidiFile = self.parser["GUI"].get("EnableMidiFile", str(DEFAULT_ENABLE_MIDI_FILE))
         self.gui.ImagePath = self.parser["GUI"].get("ImagePath", "")
+        self.gui.ShowImageFrame = self.parser["GUI"].get("ShowImageFrame", str(DEFAULT_SHOW_IMAGE_FRAME))
 
     def save_setting(self):
         with open(self.CONFIG_FILE, 'w', encoding='utf-8') as file:
@@ -162,4 +179,5 @@ class Setting():
             self.parser["GUI"]["KeyPushedColor"] = str(self.gui.KeyPushedColor)
             self.parser["GUI"]["EnableMidiFile"] = str(self.gui.EnableMidiFile)
             self.parser["GUI"]["ImagePath"] = self.gui.ImagePath
+            self.parser["GUI"]["ShowImageFrame"] = str(self.gui.ShowImageFrame)
             self.parser.write(file)

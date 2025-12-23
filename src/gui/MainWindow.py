@@ -35,6 +35,9 @@ class MainWindow():
         self.notebook.add(self.settings_tab.frame, text="Settings")
         self.notebook.add(self.about_tab.frame, text="About")
 
+        # Apply visibility preferences on startup
+        self.update_image_frame_visibility()
+
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
 
     def resize(self, width: int, height: int):
@@ -49,6 +52,10 @@ class MainWindow():
     def update_midi_file_visibility(self):
         """Update MIDI file controls visibility."""
         self.piano_tab.update_midi_file_visibility()
+
+    def update_image_frame_visibility(self):
+        """Update image frame visibility."""
+        self.piano_tab.update_image_frame_visibility()
 
     def start(self):
         self.root.mainloop()

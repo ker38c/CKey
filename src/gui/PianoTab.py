@@ -66,6 +66,7 @@ class PianoTab():
 
         # Apply initial visibility based on settings
         self.update_midi_file_visibility()
+        self.update_image_frame_visibility()
 
         # Load initial image if configured
         self.update_image_from_setting()
@@ -154,6 +155,23 @@ class PianoTab():
             print(f"Error updating MIDI file visibility: {e}")
             # If setting doesn't exist, show controls by default
             self.controls_frame.grid(row=2, column=0, pady=8)
+
+    def update_image_frame_visibility(self):
+        """Show or hide the image frame based on settings."""
+        try:
+            if self.setting.gui.ShowImageFrame:
+                self.image_frame.grid(row=0, column=0, sticky='nsew')
+                self.frame.grid_rowconfigure(0, weight=1)
+                self.frame.grid_rowconfigure(1, weight=0)
+            else:
+                self.image_frame.grid_remove()
+                self.frame.grid_rowconfigure(0, weight=0)
+                self.frame.grid_rowconfigure(1, weight=1)
+        except Exception as e:
+            print(f"Error updating image frame visibility: {e}")
+            self.image_frame.grid(row=0, column=0, sticky='nsew')
+            self.frame.grid_rowconfigure(0, weight=1)
+            self.frame.grid_rowconfigure(1, weight=0)
 
     def _choose_file(self):
         try:
