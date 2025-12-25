@@ -9,6 +9,7 @@ from src.config.Setting import (
     MIN_WIDTH, MAX_WIDTH, DEFAULT_WIDTH,
     MIN_HEIGHT, MAX_HEIGHT, DEFAULT_HEIGHT,
     DEFAULT_KEY_PUSHED_COLOR, DEFAULT_ENABLE_MIDI_FILE,
+    DEFAULT_SHOW_IMAGE_FRAME,
     round
 )
 
@@ -89,6 +90,8 @@ class TestGuiSettingInitialization:
         assert gui_setting.Height == DEFAULT_HEIGHT
         assert gui_setting.KeyPushedColor == DEFAULT_KEY_PUSHED_COLOR
         assert gui_setting.EnableMidiFile == DEFAULT_ENABLE_MIDI_FILE
+        assert gui_setting.ImagePath == ""
+        assert gui_setting.ShowImageFrame == DEFAULT_SHOW_IMAGE_FRAME
 
 
 class TestGuiSettingWidth:
@@ -363,6 +366,223 @@ class TestGuiSettingEnableMidiFile:
         assert gui_setting.EnableMidiFile is False
 
 
+class TestGuiSettingImagePath:
+    """Test GuiSetting ImagePath property."""
+    
+    def test_image_path_default_value(self):
+        # Arrange & Act
+        gui_setting = GuiSetting()
+        
+        # Assert
+        assert gui_setting.ImagePath == ""
+
+    def test_image_path_set_string(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        test_path = "/path/to/image.png"
+        
+        # Act
+        gui_setting.ImagePath = test_path
+        
+        # Assert
+        assert gui_setting.ImagePath == test_path
+
+    def test_image_path_set_windows_path(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        test_path = "C:\\Users\\test\\image.jpg"
+        
+        # Act
+        gui_setting.ImagePath = test_path
+        
+        # Assert
+        assert gui_setting.ImagePath == test_path
+
+    def test_image_path_set_none(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        gui_setting.ImagePath = "/some/path.png"
+        
+        # Act
+        gui_setting.ImagePath = None
+        
+        # Assert
+        assert gui_setting.ImagePath == ""
+
+    def test_image_path_set_empty_string(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        gui_setting.ImagePath = "/some/path.png"
+        
+        # Act
+        gui_setting.ImagePath = ""
+        
+        # Assert
+        assert gui_setting.ImagePath == ""
+
+    def test_image_path_decode_utf8_bytes(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        test_path = "/path/to/画像.png"
+        path_bytes = test_path.encode('utf-8')
+        
+        # Act
+        gui_setting.ImagePath = path_bytes
+        
+        # Assert
+        assert gui_setting.ImagePath == test_path
+
+    def test_image_path_decode_cp932_bytes(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        test_path = "C:\\ユーザー\\画像.png"
+        
+        try:
+            path_bytes = test_path.encode('cp932')
+            
+            # Act
+            gui_setting.ImagePath = path_bytes
+            
+            # Assert
+            assert gui_setting.ImagePath == test_path
+        except UnicodeEncodeError:
+            # Skip test if test string cannot be encoded in cp932
+            pytest.skip("Test string cannot be encoded in cp932")
+
+    def test_image_path_decode_invalid_bytes_fallback(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        # Create bytes that are not valid UTF-8 or cp932
+        invalid_bytes = b'\xff\xfe\xfd'
+        
+        # Act
+        gui_setting.ImagePath = invalid_bytes
+        
+        # Assert - Should not raise exception, returns empty or partial string
+        assert isinstance(gui_setting.ImagePath, str)
+
+    def test_image_path_int_conversion_to_string(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ImagePath = 12345
+        
+        # Assert
+        assert gui_setting.ImagePath == "12345"
+
+
+class TestGuiSettingShowImageFrame:
+    """Test GuiSetting ShowImageFrame property."""
+    
+    def test_show_image_frame_default_value(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act & Assert
+        assert gui_setting.ShowImageFrame == DEFAULT_SHOW_IMAGE_FRAME
+
+    def test_show_image_frame_set_bool_true(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = True
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is True
+
+    def test_show_image_frame_set_bool_false(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = False
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is False
+
+    def test_show_image_frame_string_true(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = "true"
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is True
+
+    def test_show_image_frame_string_true_uppercase(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = "TRUE"
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is True
+
+    def test_show_image_frame_string_1(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = "1"
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is True
+
+    def test_show_image_frame_string_yes(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = "yes"
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is True
+
+    def test_show_image_frame_string_false(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = "false"
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is False
+
+    def test_show_image_frame_string_0(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = "0"
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is False
+
+    def test_show_image_frame_int_nonzero(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = 1
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is True
+
+    def test_show_image_frame_int_zero(self):
+        # Arrange
+        gui_setting = GuiSetting()
+        
+        # Act
+        gui_setting.ShowImageFrame = 0
+        
+        # Assert
+        assert gui_setting.ShowImageFrame is False
+
+
 class TestSettingInitialization:
     """Test Setting initialization with config file handling."""
     
@@ -471,6 +691,8 @@ class TestSettingLoadSave:
                 setting.gui.Height = 650
                 setting.gui.KeyPushedColor = "purple"
                 setting.gui.EnableMidiFile = False
+                setting.gui.ImagePath = "/path/to/image.png"
+                setting.gui.ShowImageFrame = False
                 setting.save_setting()
             
             # Assert
@@ -482,6 +704,8 @@ class TestSettingLoadSave:
             assert parser["GUI"]["Height"] == "650"
             assert parser["GUI"]["KeyPushedColor"] == "purple"
             assert parser["GUI"]["EnableMidiFile"] == "False"
+            assert parser["GUI"]["ImagePath"] == "/path/to/image.png"
+            assert parser["GUI"]["ShowImageFrame"] == "False"
         finally:
             shutil.rmtree(temp_dir)
 
@@ -508,6 +732,103 @@ class TestSettingLoadSave:
             
             # Assert - Should use default value
             assert setting.gui.EnableMidiFile == DEFAULT_ENABLE_MIDI_FILE
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_load_setting_with_missing_image_path(self):
+        # Arrange
+        temp_dir = tempfile.mkdtemp()
+        config_path = os.path.join(temp_dir, "config.ini")
+        
+        try:
+            # Create config without ImagePath
+            import configparser
+            parser = configparser.ConfigParser()
+            parser["GUI"] = {
+                "Width": "1000",
+                "Height": "500",
+                "KeyPushedColor": "blue",
+                "EnableMidiFile": "True"
+            }
+            with open(config_path, 'w') as f:
+                parser.write(f)
+            
+            # Act
+            with mock.patch.object(Setting, 'CONFIG_FILE', config_path):
+                setting = Setting()
+            
+            # Assert - Should use default value (empty string)
+            assert setting.gui.ImagePath == ""
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_load_setting_with_missing_show_image_frame(self):
+        # Arrange
+        temp_dir = tempfile.mkdtemp()
+        config_path = os.path.join(temp_dir, "config.ini")
+        
+        try:
+            # Create config without ShowImageFrame
+            import configparser
+            parser = configparser.ConfigParser()
+            parser["GUI"] = {
+                "Width": "1000",
+                "Height": "500",
+                "KeyPushedColor": "blue",
+                "EnableMidiFile": "True"
+            }
+            with open(config_path, 'w') as f:
+                parser.write(f)
+            
+            # Act
+            with mock.patch.object(Setting, 'CONFIG_FILE', config_path):
+                setting = Setting()
+            
+            # Assert - Should use default value
+            assert setting.gui.ShowImageFrame == DEFAULT_SHOW_IMAGE_FRAME
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_load_setting_with_image_path(self):
+        # Arrange
+        temp_dir = tempfile.mkdtemp()
+        config_path = os.path.join(temp_dir, "config.ini")
+        test_path = "/home/user/image.png"
+        
+        try:
+            # Create config with ImagePath
+            with mock.patch.object(Setting, 'CONFIG_FILE', config_path):
+                setting1 = Setting()
+                setting1.gui.ImagePath = test_path
+                setting1.save_setting()
+            
+            # Act - Load in new instance
+            with mock.patch.object(Setting, 'CONFIG_FILE', config_path):
+                setting2 = Setting()
+            
+            # Assert
+            assert setting2.gui.ImagePath == test_path
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_load_setting_with_show_image_frame(self):
+        # Arrange
+        temp_dir = tempfile.mkdtemp()
+        config_path = os.path.join(temp_dir, "config.ini")
+        
+        try:
+            # Create config with ShowImageFrame set to False
+            with mock.patch.object(Setting, 'CONFIG_FILE', config_path):
+                setting1 = Setting()
+                setting1.gui.ShowImageFrame = False
+                setting1.save_setting()
+            
+            # Act - Load in new instance
+            with mock.patch.object(Setting, 'CONFIG_FILE', config_path):
+                setting2 = Setting()
+            
+            # Assert
+            assert setting2.gui.ShowImageFrame is False
         finally:
             shutil.rmtree(temp_dir)
 
@@ -551,5 +872,7 @@ class TestSettingDefaultConfig:
             assert parser["GUI"]["Height"] == str(DEFAULT_HEIGHT)
             assert parser["GUI"]["KeyPushedColor"] == str(DEFAULT_KEY_PUSHED_COLOR)
             assert parser["GUI"]["EnableMidiFile"] == str(DEFAULT_ENABLE_MIDI_FILE)
+            assert parser["GUI"]["ImagePath"] == ""
+            assert parser["GUI"]["ShowImageFrame"] == str(DEFAULT_SHOW_IMAGE_FRAME)
         finally:
             shutil.rmtree(temp_dir)

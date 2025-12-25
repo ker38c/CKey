@@ -3,6 +3,10 @@ import tkinter.ttk
 import os
 import pygame
 import mido
+try:
+    from PIL import __version__ as pillow_version
+except Exception:
+    pillow_version = "not installed"
 from version import __version__
 
 class AboutTab:
@@ -89,6 +93,30 @@ class AboutTab:
             font=("Helvetica", 10)
         )
         self.mido_license_button.pack(pady=5)
+
+        # pillow
+        self.pillow_label = tkinter.Label(
+            self.frame,
+            text=f"Pillow v{pillow_version}",
+            font=("Helvetica", 10)
+        )
+        self.pillow_label.pack(pady=2)
+
+        # pillow URL
+        self.pillow_url_label = tkinter.Label(
+            self.frame,
+            text="https://python-pillow.org/",
+            font=("Helvetica", 10)
+        )
+        self.pillow_url_label.pack(pady=2)
+
+        self.pillow_license_button = tkinter.Button(
+            self.frame,
+            text="View License",
+            command=lambda: self.show_license_popup("Pillow license", "docs/license/pillow/LICENSE"),
+            font=("Helvetica", 10)
+        )
+        self.pillow_license_button.pack(pady=5)
 
 
     def get_basedir(self):
