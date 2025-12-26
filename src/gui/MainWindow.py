@@ -38,15 +38,15 @@ class MainWindow():
         # Apply visibility preferences on startup
         self.update_image_frame_visibility()
 
-        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+        self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
 
-    def resize(self, width: int, height: int):
+    def _resize(self, width: int, height: int):
         """Resize the main window."""
         self.root.geometry(f"{width}x{height}")
 
     def apply_window_size(self, width: int, height: int):
         """Apply window size changes to main window and keyboard."""
-        self.resize(width, height)
+        self._resize(width, height)
         self.piano_tab.resize_keyboard(width, height)
 
     def update_midi_file_visibility(self):
@@ -60,7 +60,7 @@ class MainWindow():
     def start(self):
         self.root.mainloop()
 
-    def on_tab_changed(self, event):
+    def _on_tab_changed(self, event):
         self.root.focus_set()
         try:
             current = self.notebook.nametowidget(self.notebook.select())

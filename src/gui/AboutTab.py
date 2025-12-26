@@ -33,7 +33,7 @@ class AboutTab:
         self.license_button = tkinter.Button(
             self.frame,
             text="View License",
-            command=lambda: self.show_license_popup("CKey license", "LICENSE"),
+            command=lambda: self._show_license_popup("CKey license", "LICENSE"),
             font=("Helvetica", 10)
         )
         self.license_button.pack(pady=10)
@@ -65,7 +65,7 @@ class AboutTab:
         self.pygame_license_button = tkinter.Button(
             self.frame,
             text="View License",
-            command=lambda: self.show_license_popup("Pygame license", "docs/license/pygame/LGPL.txt"),
+            command=lambda: self._show_license_popup("Pygame license", "docs/license/pygame/LGPL.txt"),
             font=("Helvetica", 10)
         )
         self.pygame_license_button.pack(pady=5)
@@ -89,7 +89,7 @@ class AboutTab:
         self.mido_license_button = tkinter.Button(
             self.frame,
             text="View License",
-            command=lambda: self.show_license_popup("Mido license", "docs/license/mido/LICENSE"),
+            command=lambda: self._show_license_popup("Mido license", "docs/license/mido/LICENSE"),
             font=("Helvetica", 10)
         )
         self.mido_license_button.pack(pady=5)
@@ -113,16 +113,16 @@ class AboutTab:
         self.pillow_license_button = tkinter.Button(
             self.frame,
             text="View License",
-            command=lambda: self.show_license_popup("Pillow license", "docs/license/pillow/LICENSE"),
+            command=lambda: self._show_license_popup("Pillow license", "docs/license/pillow/LICENSE"),
             font=("Helvetica", 10)
         )
         self.pillow_license_button.pack(pady=5)
 
 
-    def get_basedir(self):
+    def _get_basedir(self):
         return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
-    def show_license_popup(self, title: str, license_path: str):
+    def _show_license_popup(self, title: str, license_path: str):
         # Create popup window
         popup = tkinter.Toplevel(self.frame)
         popup.title(title)
@@ -154,7 +154,7 @@ class AboutTab:
 
         # Read and display license text
         try:
-            license_path = os.path.join(self.get_basedir(), license_path)
+            license_path = os.path.join(self._get_basedir(), license_path)
             with open(license_path, 'r', encoding='utf-8') as f:
                 license_content = f.read()
             license_text.insert(tkinter.END, license_content)

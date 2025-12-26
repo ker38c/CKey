@@ -8,14 +8,14 @@ class Key(tkinter.Button):
         self.config(activebackground=setting.gui.KeyPushedColor)
         self.name = name
         self.midi = midi
-        self.bind('<Button-1>', self.on_press)
-        self.bind('<ButtonRelease-1>', self.on_release)
+        self.bind('<Button-1>', self._on_press)
+        self.bind('<ButtonRelease-1>', self._on_release)
 
-    def on_press(self, event):
+    def _on_press(self, event):
         if self.midi:
             self.midi.add_key_event(self.name, True)
 
-    def on_release(self, event):
+    def _on_release(self, event):
         if self.midi:
             self.midi.add_key_event(self.name, False)
 

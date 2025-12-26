@@ -41,13 +41,13 @@ class KeyBoard(tkinter.Frame):
 
         self.resize_keyboard(self.setting.gui.Width, self.setting.gui.Height)
 
-    def get_white_key_num(self)->int:
+    def _get_white_key_num(self)->int:
         num_white_key = 0
         for i, keys in enumerate(self.WHITE_KEY_NAME):
             num_white_key += len(keys)
         return num_white_key
 
-    def find_key(self, name: str)->Key:
+    def _find_key(self, name: str)->Key:
         if name == "":
             return None
         for key in self.keys:
@@ -78,7 +78,7 @@ class KeyBoard(tkinter.Frame):
             return False
 
     def set_key_state(self, name: str, state: str):
-        key = self.find_key(name)
+        key = self._find_key(name)
         if key is None:
             return
         self._safe_configure_key(key, state, key_name=name)
@@ -90,7 +90,7 @@ class KeyBoard(tkinter.Frame):
     def _calculate_dimensions(self, width: int):
         """Calculate and store key and pedal dimensions based on width."""
         self.setting.gui.Width = width
-        self.KEY_WIDTH = int(width / self.get_white_key_num())
+        self.KEY_WIDTH = int(width / self._get_white_key_num())
         self.KEY_HEIGHT = self.KEY_WIDTH * 5
         self.PEDAL_WIDTH = self.KEY_WIDTH * 3
         self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
