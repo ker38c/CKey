@@ -61,6 +61,18 @@ class MidiHandler:
                         print("midi process thread exit")
                         return
 
+    def set_output_device(self, midiout):
+        """Set the MIDI output device."""
+        self.midiout = midiout
+
+    def set_keyboard(self, keyboard):
+        """Set the keyboard for UI updates."""
+        self.keyboard = keyboard
+
+    def set_dispatcher(self, dispatcher):
+        """Set the UI dispatcher for thread-safe UI updates."""
+        self.dispatcher = dispatcher
+
     def _handler(self, recv: list):
         """
         Process a MIDI event.
@@ -136,15 +148,3 @@ class MidiHandler:
         if (key_num < 0) or (key_num >= 128):
             return ""
         return self.NOTE_NAME[key_num]
-
-    def set_output_device(self, midiout):
-        """Set the MIDI output device."""
-        self.midiout = midiout
-
-    def set_keyboard(self, keyboard):
-        """Set the keyboard for UI updates."""
-        self.keyboard = keyboard
-
-    def set_dispatcher(self, dispatcher):
-        """Set the UI dispatcher for thread-safe UI updates."""
-        self.dispatcher = dispatcher

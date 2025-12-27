@@ -40,9 +40,8 @@ class MainWindow():
 
         self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
 
-    def _resize(self, width: int, height: int):
-        """Resize the main window."""
-        self.root.geometry(f"{width}x{height}")
+    def start(self):
+        self.root.mainloop()
 
     def apply_window_size(self, width: int, height: int):
         """Apply window size changes to main window and keyboard."""
@@ -57,8 +56,9 @@ class MainWindow():
         """Update image frame visibility."""
         self.piano_tab.update_image_frame_visibility()
 
-    def start(self):
-        self.root.mainloop()
+    def _resize(self, width: int, height: int):
+        """Resize the main window."""
+        self.root.geometry(f"{width}x{height}")
 
     def _on_tab_changed(self, event):
         self.root.focus_set()

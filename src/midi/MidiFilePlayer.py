@@ -51,6 +51,31 @@ class MidiFilePlayer:
             # nothing special to clean up
             print("MIDI file player thread exit")
 
+    def play(self):
+        """Request playback start. Returns True if playback was requested."""
+        with self.lock:
+            if not self._file_path:
+                return False
+            self._playing = True
+            return True
+
+    def stop(self):
+        """Request playback stop."""
+        with self.lock:
+            self._playing = False
+
+    def is_playing(self) -> bool:
+        with self.lock:
+            return bool(self._playing)
+
+    def set_file(self, file_path: str):
+        """Set the path to the MIDI file to play."""
+        self._file_path = file_path
+
+    def set_loop(self, loop: bool):
+        """Set whether to loop playback while the start flag remains set."""
+        self._loop = bool(loop)
+
     def _load_midi(self):
         """Load the configured MIDI file, returning a MidiFile or None."""
         try:
@@ -98,31 +123,6 @@ class MidiFilePlayer:
 
             if self._post_file_pass():
                 break
-
-    def set_file(self, file_path: str):
-        """Set the path to the MIDI file to play."""
-        self._file_path = file_path
-
-    def set_loop(self, loop: bool):
-        """Set whether to loop playback while the start flag remains set."""
-        self._loop = bool(loop)
-
-    def play(self):
-        """Request playback start. Returns True if playback was requested."""
-        with self.lock:
-            if not self._file_path:
-                return False
-            self._playing = True
-            return True
-
-    def stop(self):
-        """Request playback stop."""
-        with self.lock:
-            self._playing = False
-
-    def is_playing(self) -> bool:
-        with self.lock:
-            return bool(self._playing)
 
     def _should_stop_playback(self) -> bool:
         with self.lock:

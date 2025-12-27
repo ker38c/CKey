@@ -56,6 +56,10 @@ class MidiReceiver:
 
             print("MIDI receive thread exit")
 
+    def set_input_device(self, midiin):
+        """Set the MIDI input device."""
+        self.midiin = midiin
+
     def _wait_connect(self):
         """Wait for the start flag to be set or end flag to be set."""
         while True:
@@ -63,7 +67,3 @@ class MidiReceiver:
                 if self.get_start_flag() or self.get_end_flag():
                     return
             time.sleep(0.1)
-
-    def set_input_device(self, midiin):
-        """Set the MIDI input device."""
-        self.midiin = midiin
