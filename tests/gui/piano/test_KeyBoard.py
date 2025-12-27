@@ -66,30 +66,30 @@ def keyboard(setting):
     return kb
 
 
-def test_get_white_key_num_counts_all_white_keys(keyboard):
+def test__get_white_key_num_counts_all_white_keys(keyboard):
     # Arrange
     expected = sum(len(o) for o in keyboard.WHITE_KEY_NAME)
     # Act
-    actual = keyboard.get_white_key_num()
+    actual = keyboard._get_white_key_num()
     # Assert
     assert actual == expected
 
 
-def test_find_key_returns_key_when_exists(keyboard):
+def test__find_key_returns_key_when_exists(keyboard):
     # Arrange
     name = keyboard.white_keys[0].name
     # Act
-    key = keyboard.find_key(name)
+    key = keyboard._find_key(name)
     # Assert
     assert key is keyboard.white_keys[0]
 
 
-def test_find_key_returns_none_for_empty_or_unknown(keyboard):
+def test__find_key_returns_none_for_empty_or_unknown(keyboard):
     # Arrange
     # Act & Assert: empty string -> None
-    assert keyboard.find_key("") is None
+    assert keyboard._find_key("") is None
     # Act & Assert: unknown -> None
-    assert keyboard.find_key("NoSuchKey") is None
+    assert keyboard._find_key("NoSuchKey") is None
 
 
 def test_set_key_state_calls_config_on_found_key(keyboard, monkeypatch):
@@ -134,7 +134,7 @@ def test_calculate_dimensions_sets_expected_sizes(keyboard):
     # Act
     keyboard._calculate_dimensions(width)
     # Assert
-    num_white = keyboard.get_white_key_num()
+    num_white = keyboard._get_white_key_num()
     assert keyboard.KEY_WIDTH == int(width / num_white)
     assert keyboard.KEY_HEIGHT == keyboard.KEY_WIDTH * 5
     assert keyboard.PEDAL_WIDTH == keyboard.KEY_WIDTH * 3

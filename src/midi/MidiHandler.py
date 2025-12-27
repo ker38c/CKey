@@ -49,7 +49,7 @@ class MidiHandler:
         while True:
             try:
                 event = self.event_queue.get(timeout=1.0)
-                self.handler(event)
+                self._handler(event)
             except Empty:
                 with self.lock:
                     if self.get_end_flag():
@@ -61,7 +61,7 @@ class MidiHandler:
                         print("midi process thread exit")
                         return
 
-    def handler(self, recv: list):
+    def _handler(self, recv: list):
         """
         Process a MIDI event.
         
@@ -72,19 +72,19 @@ class MidiHandler:
 
         # Note Off
         if (status & 0xF0) == 0x80:
-            self.note_off(key_name=data1)
+            self._note_off(key_name=data1)
 
         # Note On
         elif (status & 0xF0) == 0x90:
-            self.note_on(key_name=data1, velocity=data2)
+            self._note_on(key_name=data1, velocity=data2)
 
         # Control Change
         elif (status & 0xF0) == 0xB0:
             # Sustain On/Off
             if data1 == 0x40:
-                self.sustain_change(status=status, value=data2)
+                self._sustain_change(status=status, value=data2)
 
-    def note_on(self, key_name: int, velocity: int):
+    def _note_on(self, key_name: int, velocity: int):
         """
         Handle Note On event.
         
@@ -92,7 +92,7 @@ class MidiHandler:
             key_name: MIDI note number
             velocity: Note velocity (0-127)
         """
-        key_name_str = self.get_key_name(key_name)
+        key_name_str = self._get_key_name(key_name)
         if key_name_str == "":
             return
         if self.midiout is not None:
@@ -101,14 +101,14 @@ class MidiHandler:
         if self.dispatcher:
             self.dispatcher.post_to('keyboard', 'set_key_state', key_name_str, tkinter.ACTIVE)
 
-    def note_off(self, key_name: int):
+    def _note_off(self, key_name: int):
         """
         Handle Note Off event.
         
         Args:
             key_name: MIDI note number
         """
-        key_name_str = self.get_key_name(key_name)
+        key_name_str = self._get_key_name(key_name)
         if key_name_str == "":
             return
         if self.midiout is not None:
@@ -117,7 +117,7 @@ class MidiHandler:
         if self.dispatcher:
             self.dispatcher.post_to('keyboard', 'set_key_state', key_name_str, tkinter.NORMAL)
 
-    def sustain_change(self, status: int, value: int):
+    def _sustain_change(self, status: int, value: int):
         """
         Handle Sustain (Control Change) event.
         
@@ -131,7 +131,7 @@ class MidiHandler:
         if self.dispatcher:
             self.dispatcher.post_to('keyboard', 'set_sustain', value > 0)
 
-    def get_key_name(self, key_num: int) -> str:
+    def _get_key_name(self, key_num: int) -> str:
         """Get the note name for a given MIDI key number."""
         if (key_num < 0) or (key_num >= 128):
             return ""

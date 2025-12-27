@@ -34,7 +34,7 @@ class MidiReceiver:
                     if self.get_end_flag():
                         break
 
-                self.wait_connect()
+                self._wait_connect()
 
                 if self.midiin is not None:
                     if self.midiin.poll():
@@ -56,7 +56,7 @@ class MidiReceiver:
 
             print("MIDI receive thread exit")
 
-    def wait_connect(self):
+    def _wait_connect(self):
         """Wait for the start flag to be set or end flag to be set."""
         while True:
             with self.lock:

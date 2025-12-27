@@ -57,14 +57,14 @@ class FakeKeyboard:
         self._key = FakeKey()
         self.sustain = FakeSustain()
         self.last_find = None
-    def find_key(self, name):
+    def _find_key(self, name):
         self.last_find = name
         if name == "":
             return ""
         return self._key
 
     def set_key_state(self, name, state):
-        key = self.find_key(name)
+        key = self._find_key(name)
         if key == "":
             return
         key.config(state=state)
@@ -108,26 +108,26 @@ def handler(fake_dispatcher):
     )
 
 
-def test_get_key_name_returns_first_note(handler):
+def test__get_key_name_returns_first_note(handler):
     # Arrange / Act
-    result = handler.get_key_name(0)
+    result = handler._get_key_name(0)
     # Assert
     assert result == handler.NOTE_NAME[0]
 
 
-def test_get_key_name_returns_C4_for_index(handler):
+def test__get_key_name_returns_C4_for_index(handler):
     # Arrange
     idx_c4 = handler.NOTE_NAME.index("C4")
     # Act
-    result = handler.get_key_name(idx_c4)
+    result = handler._get_key_name(idx_c4)
     # Assert
     assert result == "C4"
 
 
-def test_get_key_name_returns_empty_for_invalid_indices(handler):
+def test__get_key_name_returns_empty_for_invalid_indices(handler):
     # Arrange / Act / Assert
-    assert handler.get_key_name(-1) == ""
-    assert handler.get_key_name(128) == ""
+    assert handler._get_key_name(-1) == ""
+    assert handler._get_key_name(128) == ""
 
 
 def test_handler_note_on_updates_midiout_and_key_state(handler, fake_dispatcher):
@@ -142,7 +142,7 @@ def test_handler_note_on_updates_midiout_and_key_state(handler, fake_dispatcher)
     velocity = 77
     on_event = ([0x90, note_num, velocity, 0], 0)
     # Act
-    handler.handler(on_event)
+    handler._handler(on_event)
     # Assert
     midiout.note_on.assert_called_with(note=note_num, velocity=velocity)
     assert kb._key.last_state == fake_tkinter.ACTIVE
@@ -159,7 +159,7 @@ def test_handler_note_off_updates_midiout_and_key_state(handler, fake_dispatcher
     note_num = handler.NOTE_NAME.index(note_name)
     off_event = ([0x80, note_num, 0, 0], 0)
     # Act
-    handler.handler(off_event)
+    handler._handler(off_event)
     # Assert
     midiout.note_off.assert_called_with(note=note_num)
     assert kb._key.last_state == fake_tkinter.NORMAL
@@ -175,7 +175,7 @@ def test_handler_sustain_on_writes_midiout_and_updates_sustain(handler, fake_dis
     status = 0xB0
     cc_on_event = ([status, 0x40, 127, 0], 0)
     # Act
-    handler.handler(cc_on_event)
+    handler._handler(cc_on_event)
     # Assert
     midiout.write_short.assert_called_with(status, 0x40, 127)
     assert kb.sustain.last_state == fake_tkinter.ACTIVE
@@ -191,7 +191,7 @@ def test_handler_sustain_off_writes_midiout_and_updates_sustain(handler, fake_di
     status = 0xB0
     cc_off_event = ([status, 0x40, 0, 0], 0)
     # Act
-    handler.handler(cc_off_event)
+    handler._handler(cc_off_event)
     # Assert
     midiout.write_short.assert_called_with(status, 0x40, 0)
     assert kb.sustain.last_state == fake_tkinter.NORMAL
