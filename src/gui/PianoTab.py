@@ -108,35 +108,6 @@ class PianoTab():
             self._image_original = None
         self._redraw_image(None)
 
-    def _redraw_image(self, event):
-        if self._image_original is None or ImageOps is None or ImageTk is None:
-            try:
-                self.image_canvas.delete('all')
-                w = max(1, self.image_canvas.winfo_width())
-                h = max(1, self.image_canvas.winfo_height())
-                msg = "Install Pillow to show images" if (ImageOps is None or ImageTk is None) else "No image"
-                self.image_canvas.create_text(w // 2, h // 2, text=msg, fill='gray')
-            except Exception:
-                pass
-            return
-
-        w = max(1, self.image_canvas.winfo_width())
-        h = max(1, self.image_canvas.winfo_height())
-        # Provide a small margin so the image doesn't touch edges
-        pad = 8
-        target_w = max(1, w - pad * 2)
-        target_h = max(1, h - pad * 2)
-        try:
-            fitted = ImageOps.contain(self._image_original, (target_w, target_h))
-            self._image_tk = ImageTk.PhotoImage(fitted)
-            self.image_canvas.delete('all')
-            self.image_canvas.create_image(w // 2, h // 2, image=self._image_tk, anchor='center')
-        except Exception:
-            try:
-                self.image_canvas.delete('all')
-            except Exception:
-                pass
-
     def refresh_image(self):
         """Force a redraw of the image (e.g., when tab becomes visible)."""
         try:
@@ -203,6 +174,35 @@ class PianoTab():
         if self.file_player is not None:
             try:
                 self.file_player.stop()
+            except Exception:
+                pass
+
+    def _redraw_image(self, event):
+        if self._image_original is None or ImageOps is None or ImageTk is None:
+            try:
+                self.image_canvas.delete('all')
+                w = max(1, self.image_canvas.winfo_width())
+                h = max(1, self.image_canvas.winfo_height())
+                msg = "Install Pillow to show images" if (ImageOps is None or ImageTk is None) else "No image"
+                self.image_canvas.create_text(w // 2, h // 2, text=msg, fill='gray')
+            except Exception:
+                pass
+            return
+
+        w = max(1, self.image_canvas.winfo_width())
+        h = max(1, self.image_canvas.winfo_height())
+        # Provide a small margin so the image doesn't touch edges
+        pad = 8
+        target_w = max(1, w - pad * 2)
+        target_h = max(1, h - pad * 2)
+        try:
+            fitted = ImageOps.contain(self._image_original, (target_w, target_h))
+            self._image_tk = ImageTk.PhotoImage(fitted)
+            self.image_canvas.delete('all')
+            self.image_canvas.create_image(w // 2, h // 2, image=self._image_tk, anchor='center')
+        except Exception:
+            try:
+                self.image_canvas.delete('all')
             except Exception:
                 pass
 

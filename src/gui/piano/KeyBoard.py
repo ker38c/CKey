@@ -41,13 +41,35 @@ class KeyBoard(tkinter.Frame):
 
         self.resize_keyboard(self.setting.gui.Width, self.setting.gui.Height)
 
-    def get_white_key_num(self)->int:
+    def set_key_state(self, name: str, state: str):
+        key = self._find_key(name)
+        if key is None:
+            return
+        self._safe_configure_key(key, state, key_name=name)
+
+    def set_sustain(self, pressed: bool):
+        state = tkinter.ACTIVE if pressed else tkinter.NORMAL
+        self._safe_configure_key(self.sustain, state, key_name="sustain")
+
+    def resize_keyboard(self, width: int, height: int):
+        """Resize the keyboard with the given width and height
+
+        Args:
+            width (int): The new width of the keyboard (in pixels)
+            height (int): The new height of the keyboard (in pixels)
+            Note: height is currently unused; dimensions derive from width.
+        """
+        self._calculate_dimensions(width)
+        self._update_frame_size()
+        self._place_keyboard()
+
+    def _get_white_key_num(self)->int:
         num_white_key = 0
         for i, keys in enumerate(self.WHITE_KEY_NAME):
             num_white_key += len(keys)
         return num_white_key
 
-    def find_key(self, name: str)->Key:
+    def _find_key(self, name: str)->Key:
         if name == "":
             return None
         for key in self.keys:
@@ -77,20 +99,10 @@ class KeyBoard(tkinter.Frame):
                 print(f"Error configuring key state: {e}")
             return False
 
-    def set_key_state(self, name: str, state: str):
-        key = self.find_key(name)
-        if key is None:
-            return
-        self._safe_configure_key(key, state, key_name=name)
-
-    def set_sustain(self, pressed: bool):
-        state = tkinter.ACTIVE if pressed else tkinter.NORMAL
-        self._safe_configure_key(self.sustain, state, key_name="sustain")
-
     def _calculate_dimensions(self, width: int):
         """Calculate and store key and pedal dimensions based on width."""
         self.setting.gui.Width = width
-        self.KEY_WIDTH = int(width / self.get_white_key_num())
+        self.KEY_WIDTH = int(width / self._get_white_key_num())
         self.KEY_HEIGHT = self.KEY_WIDTH * 5
         self.PEDAL_WIDTH = self.KEY_WIDTH * 3
         self.PEDAL_HEIGHT = self.KEY_WIDTH * 3
@@ -117,14 +129,3 @@ class KeyBoard(tkinter.Frame):
         # Place sustain pedal
         self.sustain.place(x=self.setting.gui.Width / 2, y=self.KEY_HEIGHT, width=self.PEDAL_WIDTH, height=self.PEDAL_HEIGHT)
 
-    def resize_keyboard(self, width: int, height: int):
-        """Resize the keyboard with the given width and height
-
-        Args:
-            width (int): The new width of the keyboard (in pixels)
-            height (int): The new height of the keyboard (in pixels)
-            Note: height is currently unused; dimensions derive from width.
-        """
-        self._calculate_dimensions(width)
-        self._update_frame_size()
-        self._place_keyboard()

@@ -40,7 +40,7 @@ class SettingsTab():
         self.text_key_pushed_color = tkinter.StringVar()
         self.text_key_pushed_color.set(setting.gui.KeyPushedColor)
         self.entry_key_pushed_color = tkinter.Entry(self.frame, textvariable=self.text_key_pushed_color)
-        self.entry_key_pushed_color.bind("<FocusOut>", self.on_color_updated)
+        self.entry_key_pushed_color.bind("<FocusOut>", self._on_color_updated)
         self.entry_key_pushed_color.grid(row=3, column=1)
 
         # color indicator
@@ -88,9 +88,9 @@ class SettingsTab():
         self.entry_height.event_generate("<FocusOut>")
         self.entry_key_pushed_color.event_generate("<FocusOut>")
 
-        self.apply_setting()
+        self._apply_setting()
 
-    def apply_setting(self):
+    def _apply_setting(self):
         self.setting.save_setting()
         # Apply window size changes
         self.main_window.apply_window_size(self.setting.gui.Width, self.setting.gui.Height)
@@ -119,7 +119,7 @@ class SettingsTab():
         except:
             pass
 
-    def on_color_updated(self, event):
+    def _on_color_updated(self, event):
         try:
             self.setting.gui.KeyPushedColor = self.text_key_pushed_color.get()
             self.label_color_box.config(bg=self.text_key_pushed_color.get())

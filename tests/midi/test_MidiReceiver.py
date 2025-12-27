@@ -57,7 +57,7 @@ class TestMidiReceiver(unittest.TestCase):
         )
 
         # Act: call wait_connect (should return quickly because start flag is True)
-        receiver.wait_connect()
+        receiver._wait_connect()
 
         # Assert: if we reached here, the function returned (no explicit state change expected)
         self.assertTrue(flags["start"])  # sanity assertion
@@ -74,7 +74,7 @@ class TestMidiReceiver(unittest.TestCase):
         )
 
         # Act: call wait_connect (should return quickly because end flag is True)
-        receiver.wait_connect()
+        receiver._wait_connect()
 
         # Assert: function returned; flags unchanged
         self.assertTrue(flags["end"])  # sanity assertion

@@ -78,7 +78,7 @@ class FakeKeyboard:
         self._key = FakeKey()
         self.sustain = FakeSustain()
         self.last_find = None
-    def find_key(self, name):
+    def _find_key(self, name):
         self.last_find = name
         if name == "":
             return ""
@@ -86,7 +86,7 @@ class FakeKeyboard:
 
     # Methods expected by UiDispatcher in the real KeyBoard
     def set_key_state(self, name, state):
-        key = self.find_key(name)
+        key = self._find_key(name)
         if key == "":
             return
         key.config(state=state)

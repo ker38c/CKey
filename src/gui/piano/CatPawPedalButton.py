@@ -17,11 +17,19 @@ class CatPawPedalButton(tkinter.Frame):
         self.canvas.config(bg="white")
         self.canvas.pack(fill=tkinter.BOTH, expand=True)
 
-        self.canvas.bind('<Button-1>', self.on_press)
-        self.canvas.bind('<ButtonRelease-1>', self.on_release)
-        self.canvas.bind('<Configure>', self.on_configure)
+        self.canvas.bind('<Button-1>', self._on_press)
+        self.canvas.bind('<ButtonRelease-1>', self._on_release)
+        self.canvas.bind('<Configure>', self._on_configure)
 
         self._draw_paw()
+
+    def config(self, **kwargs):
+        """Override config to handle state changes"""
+        if 'state' in kwargs:
+            state = kwargs.pop('state')
+            self.is_pressed = (state == tkinter.ACTIVE)
+            self._draw_paw()
+        super().config(**kwargs)
 
     def _draw_paw(self):
         self.canvas.delete("all")
@@ -116,22 +124,14 @@ class CatPawPedalButton(tkinter.Frame):
             width=0
         )
 
-    def on_press(self, event):
+    def _on_press(self, event):
         self.is_pressed = True
         self._draw_paw()
 
-    def on_release(self, event):
+    def _on_release(self, event):
         self.is_pressed = False
         self._draw_paw()
 
-    def on_configure(self, event):
+    def _on_configure(self, event):
         """Redraw paw print when resizing button"""
         self._draw_paw()
-
-    def config(self, **kwargs):
-        """Override config to handle state changes"""
-        if 'state' in kwargs:
-            state = kwargs.pop('state')
-            self.is_pressed = (state == tkinter.ACTIVE)
-            self._draw_paw()
-        super().config(**kwargs)
