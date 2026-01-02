@@ -10,78 +10,79 @@ class SettingsTab():
         self.setting = setting
         self.main_window = main_window
 
-        self.label_window = tkinter.Label(self.frame, text="Window settings")
-        self.label_window.grid(row=0, column=0)
+        # Window settings group
+        self.window_settings_frame = tkinter.LabelFrame(self.frame, text="Window settings", padx=10, pady=10)
+        self.window_settings_frame.grid(row=0, column=0, columnspan=3, padx=10, pady=10, sticky='ew')
 
         # window width
-        self.label_width = tkinter.Label(self.frame, text="Window width")
-        self.label_width.grid(row=1, column=0)
+        self.label_width = tkinter.Label(self.window_settings_frame, text="Window width")
+        self.label_width.grid(row=0, column=0, sticky='w')
 
         self.text_width = tkinter.StringVar()
         self.text_width.set(str(setting.gui.Width))
-        self.entry_width = tkinter.Entry(self.frame, textvariable=self.text_width)
-        self.entry_width.grid(row=1, column=1)
+        self.entry_width = tkinter.Entry(self.window_settings_frame, textvariable=self.text_width)
+        self.entry_width.grid(row=0, column=1)
         self.entry_width.bind("<FocusOut>", self._on_width_key)
 
         # window height
-        self.label_height = tkinter.Label(self.frame, text="Window height")
-        self.label_height.grid(row=2, column=0)
+        self.label_height = tkinter.Label(self.window_settings_frame, text="Window height")
+        self.label_height.grid(row=1, column=0, sticky='w')
 
         self.text_height = tkinter.StringVar()
         self.text_height.set(str(setting.gui.Height))
-        self.entry_height = tkinter.Entry(self.frame, textvariable=self.text_height)
-        self.entry_height.grid(row=2, column=1)
+        self.entry_height = tkinter.Entry(self.window_settings_frame, textvariable=self.text_height)
+        self.entry_height.grid(row=1, column=1)
         self.entry_height.bind("<FocusOut>", self._on_height_key)
 
         # key pushed color
-        self.label_key_pushed_coler = tkinter.Label(self.frame, text="Key pushed color")
-        self.label_key_pushed_coler.grid(row=3, column=0)
+        self.label_key_pushed_coler = tkinter.Label(self.window_settings_frame, text="Key pushed color")
+        self.label_key_pushed_coler.grid(row=2, column=0, sticky='w')
 
         self.text_key_pushed_color = tkinter.StringVar()
         self.text_key_pushed_color.set(setting.gui.KeyPushedColor)
-        self.entry_key_pushed_color = tkinter.Entry(self.frame, textvariable=self.text_key_pushed_color)
+        self.entry_key_pushed_color = tkinter.Entry(self.window_settings_frame, textvariable=self.text_key_pushed_color)
         self.entry_key_pushed_color.bind("<FocusOut>", self._on_color_updated)
-        self.entry_key_pushed_color.grid(row=3, column=1)
+        self.entry_key_pushed_color.grid(row=2, column=1)
 
         # color indicator
-        self.label_color_box = tkinter.Label(self.frame, width=2, bg=setting.gui.KeyPushedColor)
-        self.label_color_box.grid(row=3, column=2)
+        self.label_color_box = tkinter.Label(self.window_settings_frame, width=2, bg=setting.gui.KeyPushedColor)
+        self.label_color_box.grid(row=2, column=2, sticky='w', padx=(2, 0))
 
         # MIDI file player toggle
-        self.label_midi_file = tkinter.Label(self.frame, text="Enable MIDI file player")
-        self.label_midi_file.grid(row=4, column=0)
+        self.label_midi_file = tkinter.Label(self.window_settings_frame, text="Enable MIDI file player")
+        self.label_midi_file.grid(row=3, column=0, sticky='w')
 
         self.var_enable_midi_file = tkinter.BooleanVar()
         self.var_enable_midi_file.set(setting.gui.EnableMidiFile)
-        self.check_midi_file = tkinter.Checkbutton(self.frame, variable=self.var_enable_midi_file, command=self._on_enable_midi_file_changed)
-        self.check_midi_file.grid(row=4, column=1)
+        self.check_midi_file = tkinter.Checkbutton(self.window_settings_frame, variable=self.var_enable_midi_file, command=self._on_enable_midi_file_changed)
+        self.check_midi_file.grid(row=3, column=1)
 
         # Image frame toggle
-        self.label_show_image = tkinter.Label(self.frame, text="Show image frame")
-        self.label_show_image.grid(row=5, column=0)
+        self.label_show_image = tkinter.Label(self.window_settings_frame, text="Show image frame")
+        self.label_show_image.grid(row=4, column=0, sticky='w')
 
         self.var_show_image_frame = tkinter.BooleanVar()
         self.var_show_image_frame.set(getattr(setting.gui, "ShowImageFrame", True))
-        self.check_show_image_frame = tkinter.Checkbutton(self.frame, variable=self.var_show_image_frame, command=self._on_show_image_frame_changed)
-        self.check_show_image_frame.grid(row=5, column=1)
+        self.check_show_image_frame = tkinter.Checkbutton(self.window_settings_frame, variable=self.var_show_image_frame, command=self._on_show_image_frame_changed)
+        self.check_show_image_frame.grid(row=4, column=1)
 
         # image above keyboard
-        self.label_image = tkinter.Label(self.frame, text="Image")
-        self.label_image.grid(row=6, column=0)
+        self.label_image = tkinter.Label(self.window_settings_frame, text="Image")
+        self.label_image.grid(row=5, column=0, sticky='w')
 
         self._image_name = tkinter.StringVar()
         try:
             self._image_name.set(os.path.basename(setting.gui.ImagePath) if setting.gui.ImagePath else "No image")
         except Exception:
             self._image_name.set("No image")
-        self.label_image_name = tkinter.Label(self.frame, textvariable=self._image_name, width=40, anchor='w')
-        self.label_image_name.grid(row=6, column=1, columnspan=2, sticky='w')
+        self.label_image_name = tkinter.Label(self.window_settings_frame, textvariable=self._image_name, width=40, anchor='w')
+        self.label_image_name.grid(row=5, column=1, columnspan=2, sticky='w')
 
-        self.btn_choose_image = tkinter.Button(self.frame, text="Choose Image", command=self._choose_image)
-        self.btn_choose_image.grid(row=7, column=0)
+        self.btn_choose_image = tkinter.Button(self.window_settings_frame, text="Choose Image", command=self._choose_image)
+        self.btn_choose_image.grid(row=6, column=0, sticky='w')
 
         self.button_apply = tkinter.Button(self.frame, text="Save", command=self._on_save_button_click)
-        self.button_apply.grid(row=8, column=1)
+        self.button_apply.grid(row=1, column=0, columnspan=3, pady=10)
 
     def _on_save_button_click(self):
         self.entry_width.event_generate("<FocusOut>")
