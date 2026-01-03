@@ -6,7 +6,7 @@ from midi.MidiFilePlayer import MidiFilePlayer
 
 def main():
     setting = Setting()
-    midi = MidiController()
+    midi = MidiController.create_default()
     
     # Create MidiFilePlayer for file playback (system start/end separate)
     file_player = MidiFilePlayer(

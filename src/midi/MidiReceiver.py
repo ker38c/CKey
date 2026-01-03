@@ -1,4 +1,3 @@
-import pygame.midi
 import time
 from threading import Lock
 from queue import Queue
@@ -22,7 +21,6 @@ class MidiReceiver:
         self.get_start_flag = start_flag_getter
         self.get_end_flag = end_flag_getter
         self.midiin = None
-        self.midi_in_id = pygame.midi.get_default_input_id()
 
     def run(self):
         """
