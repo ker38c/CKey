@@ -3,10 +3,12 @@ from gui.MainWindow import MainWindow
 from config.Setting import Setting
 from midi.MidiController import MidiController
 from midi.MidiFilePlayer import MidiFilePlayer
+from midi.PygameMidiBackend import PygameMidiBackend
 
 def main():
     setting = Setting()
-    midi = MidiController.create_default()
+    backend = PygameMidiBackend()
+    midi = MidiController(dispatcher=None, midi_backend=backend)
     
     # Create MidiFilePlayer for file playback (system start/end separate)
     file_player = MidiFilePlayer(

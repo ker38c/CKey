@@ -5,7 +5,6 @@ from enum import IntEnum
 from midi.MidiReceiver import MidiReceiver
 from midi.MidiHandler import MidiHandler
 from midi.MidiBackend import MidiBackend
-from midi.PygameMidiBackend import PygameMidiBackend
 
 
 class MidiDeviceInfo(IntEnum):
@@ -62,19 +61,6 @@ class MidiController:
         )
 
         self.connect()
-
-    @classmethod
-    def create_default(cls):
-        """
-        Create a MidiController with default implementations for production use.
-        
-        Returns:
-            MidiController: Instance with PygameMidiBackend
-        """
-        from gui.piano.KeyBoard import KeyBoard  # Avoid circular import
-        # Note: UiDispatcher would need to be imported or injected at a higher level
-        # For now, returning with None dispatcher to be set later
-        return cls(dispatcher=None, midi_backend=PygameMidiBackend())
 
     def init_keyboard(self, keyboard: KeyBoard):
         """Forward keyboard to the handler; controller does not keep it as a member."""
