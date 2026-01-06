@@ -10,7 +10,7 @@ from midi.PygameMidiBackend import PygameMidiBackend
 def main():
     setting = Setting()
     backend = PygameMidiBackend()
-    midi = MidiController(dispatcher=None, midi_backend=backend)
+    midi = MidiController(midi_backend=backend, dispatcher=None)
 
     root = tkinter.Tk()
     dispatcher = UiDispatcher(root)
