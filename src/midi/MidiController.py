@@ -24,7 +24,7 @@ class MidiController:
     while managing MIDI device connections and dispatching UI updates.
     """
     
-    def __init__(self, dispatcher, midi_backend: MidiBackend):
+    def __init__(self, dispatcher=None, midi_backend: MidiBackend):
         self.midi_backend = midi_backend
         self.midi_backend.init()
 
