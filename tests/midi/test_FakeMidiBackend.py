@@ -1,6 +1,10 @@
+import sys
+import os
 import pytest
 
 # Import test doubles directly from conftest definitions
+sys.path.insert(0, os.path.dirname(__file__))
+
 from conftest import FakeMidiBackend, FakeMidiInput, FakeMidiOutput
 
 
