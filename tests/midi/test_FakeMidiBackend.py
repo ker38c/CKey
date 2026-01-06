@@ -22,7 +22,6 @@ class TestFakeMidiBackend:
         assert backend._initialized is False
 
     def test_fake_backend_device_management(self):
-        from conftest import FakeMidiBackend
         backend = FakeMidiBackend()
         backend.add_device(b"USB", b"Piano", is_input=1, is_output=0)
         backend.add_device(b"USB", b"Synth", is_input=0, is_output=1)
@@ -32,7 +31,6 @@ class TestFakeMidiBackend:
         assert backend.get_device_info(1) == (b"USB", b"Synth", 0, 1, 0)
 
     def test_fake_input_device(self):
-        from conftest import FakeMidiInput
         inp = FakeMidiInput(0)
         assert inp.poll() is False
 
@@ -44,7 +42,6 @@ class TestFakeMidiBackend:
         assert inp.poll() is False
 
     def test_fake_output_device(self):
-        from conftest import FakeMidiOutput
         out = FakeMidiOutput(0)
         out.note_on(60, 100)
         out.note_off(60)
@@ -56,7 +53,6 @@ class TestFakeMidiBackend:
 
     def test_fake_backend_input_creation(self):
         """Backend should create FakeMidiInput instances."""
-        from conftest import FakeMidiBackend, FakeMidiInput
         backend = FakeMidiBackend()
         inp1 = backend.create_input(0)
         inp2 = backend.create_input(1)
@@ -69,7 +65,6 @@ class TestFakeMidiBackend:
 
     def test_fake_backend_output_creation(self):
         """Backend should create FakeMidiOutput instances."""
-        from conftest import FakeMidiBackend, FakeMidiOutput
         backend = FakeMidiBackend()
         out1 = backend.create_output(0)
         out2 = backend.create_output(1)
@@ -82,7 +77,6 @@ class TestFakeMidiBackend:
 
     def test_fake_backend_default_ids(self):
         """Backend should track default input/output device IDs."""
-        from conftest import FakeMidiBackend
         backend = FakeMidiBackend()
         assert backend.get_default_input_id() == -1
         assert backend.get_default_output_id() == -1
