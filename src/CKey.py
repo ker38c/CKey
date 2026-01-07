@@ -1,12 +1,20 @@
 import threading
+import tkinter
 from gui.MainWindow import MainWindow
+from gui.UiDispatcher import UiDispatcher
 from config.Setting import Setting
 from midi.MidiController import MidiController
 from midi.MidiFilePlayer import MidiFilePlayer
+from midi.PygameMidiBackend import PygameMidiBackend
 
 def main():
     setting = Setting()
-    midi = MidiController()
+    backend = PygameMidiBackend()
+    midi = MidiController(midi_backend=backend, dispatcher=None)
+
+    root = tkinter.Tk()
+    dispatcher = UiDispatcher(root)
+    dispatcher.start()
     
     # Create MidiFilePlayer for file playback (system start/end separate)
     file_player = MidiFilePlayer(
@@ -16,11 +24,11 @@ def main():
         end_flag_getter=lambda: midi.end
     )
     
-    window = MainWindow(setting, midi, file_player)
+    window = MainWindow(root, setting, midi, file_player, dispatcher)
 
     # Pass dispatcher to MidiController for UI updates
-    midi.dispatcher = window.dispatcher
-    midi.handler.set_dispatcher(window.dispatcher)
+    midi.dispatcher = dispatcher
+    midi.handler.set_dispatcher(dispatcher)
     midi.init_keyboard(window.piano_tab.keyboard)
 
     # MIDI receive thread

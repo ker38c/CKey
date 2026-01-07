@@ -1,10 +1,10 @@
-import pygame.midi
-from threading import Lock, Thread
+from threading import Lock
 from queue import Queue
 from gui.piano.KeyBoard import KeyBoard
 from enum import IntEnum
 from midi.MidiReceiver import MidiReceiver
 from midi.MidiHandler import MidiHandler
+from midi.MidiBackend import MidiBackend
 
 
 class MidiDeviceInfo(IntEnum):
@@ -24,8 +24,10 @@ class MidiController:
     while managing MIDI device connections and dispatching UI updates.
     """
     
-    def __init__(self, dispatcher=None):
-        pygame.midi.init()
+    def __init__(self, midi_backend: MidiBackend,dispatcher=None):
+        self.midi_backend = midi_backend
+        self.midi_backend.init()
+
         self.dispatcher = dispatcher
         self.lock = Lock()
         self.event_queue = Queue()
@@ -34,13 +36,13 @@ class MidiController:
         self.midiin = None
         self.midiout = None
 
-        self.midi_in_id = pygame.midi.get_default_input_id()
-        self.midi_out_id = pygame.midi.get_default_output_id()
-        midi_count = pygame.midi.get_count()
+        self.midi_in_id = self.midi_backend.get_default_input_id()
+        self.midi_out_id = self.midi_backend.get_default_output_id()
+        midi_count = self.midi_backend.get_count()
         self.midi_info = []
 
         for i in range(midi_count):
-            info = pygame.midi.get_device_info(i)
+            info = self.midi_backend.get_device_info(i)
             self.midi_info.append(info)
 
         # Create MidiReceiver and MidiHandler with closures to access self.start and self.end
@@ -76,17 +78,17 @@ class MidiController:
                 self.midiin = None
                 self.midiout = None
                 try:
-                    pygame.midi.quit()
+                    self.midi_backend.quit()
                 except Exception:
                     pass
-                pygame.midi.init()
+                self.midi_backend.init()
                 print("MidiController restart.")
 
             try:
                 if self.midi_in_id != -1:
-                    self.midiin = pygame.midi.Input(self.midi_in_id)
+                    self.midiin = self.midi_backend.create_input(self.midi_in_id)
                 if self.midi_out_id != -1:
-                    self.midiout = pygame.midi.Output(self.midi_out_id)
+                    self.midiout = self.midi_backend.create_output(self.midi_out_id)
 
                 # Pass devices to receiver and handler
                 try:

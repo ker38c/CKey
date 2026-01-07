@@ -9,10 +9,12 @@ from midi.MidiController import MidiController
 from gui.UiDispatcher import UiDispatcher
 
 class MainWindow():
-    def __init__(self, setting: Setting, midi: MidiController, file_player=None):
+    def __init__(self, root: tkinter.Tk, setting: Setting, midi: MidiController, file_player, dispatcher: UiDispatcher):
+
         self.setting = setting
         self.file_player = file_player
-        self.root = tkinter.Tk()
+        self.root = root
+        self.dispatcher = dispatcher
         self.root.title("CKey")
         try:
             self.root.geometry(f"{self.setting.gui.Width}x{self.setting.gui.Height}")
@@ -20,10 +22,6 @@ class MainWindow():
             self.root.geometry("1280x400")
         self.notebook = tkinter.ttk.Notebook(self.root)
         self.notebook.pack(expand=True, fill="both", padx=10, pady=10)
-
-        # create UI dispatcher
-        self.dispatcher = UiDispatcher(self.root)
-        self.dispatcher.start()
 
         # create tabs
         self.piano_tab = PianoTab(self.notebook, setting, midi, file_player, dispatcher=self.dispatcher)
