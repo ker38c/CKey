@@ -51,7 +51,7 @@ class TestMidiControllerDeviceDiscovery:
     def test_connect_creates_input_from_backend(self, fake_backend_with_devices, fake_dispatcher):
         """connect() should use backend.create_input() to create input device."""
         # Act
-        controller = MidiController(
+        MidiController(
             dispatcher=fake_dispatcher,
             midi_backend=fake_backend_with_devices
         )
