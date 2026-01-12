@@ -2,6 +2,7 @@ import tkinter
 import tkinter.ttk
 from tkinter import filedialog
 import os
+from enum import Enum
 from gui.piano.KeyBoard import KeyBoard
 from config.Setting import Setting
 from midi.MidiController import MidiController
@@ -12,6 +13,13 @@ except ImportError as e:
     ImageTk = None
     ImageOps = None
     print(f"Warning: Pillow (PIL) is not available. Image display will be disabled. ({e})")
+
+
+class PlayButtonState(Enum):
+    """Enum for play button state."""
+    PLAY = 'play'
+    PAUSE = 'pause'
+
 
 class PianoTab():
     def __init__(self, root: tkinter.ttk.Notebook, setting: Setting, midi: MidiController, file_player=None, dispatcher=None):
@@ -57,7 +65,7 @@ class PianoTab():
         self.btn_play.grid(row=1, column=1, padx=4)
         self.btn_play.bind('<Button-1>', lambda e: self._on_play_press(e))
         self.btn_play.bind('<ButtonRelease-1>', lambda e: self._on_play_release(e))
-        self._play_button_state = 'play'
+        self._play_button_state = PlayButtonState.PLAY
 
         self.btn_stop = tkinter.Canvas(self.controls_frame, width=30, height=30, bg='SystemButtonFace', highlightthickness=0, relief='raised', borderwidth=2)
         self.btn_stop.create_rectangle(8, 8, 22, 22, fill='black', outline='black', tags='stop_icon')
@@ -166,23 +174,23 @@ class PianoTab():
         # ensure file_player knows the file
         if self.file_player is not None:
             try:
-                if self._play_button_state == 'play':
+                if self._play_button_state == PlayButtonState.PLAY:
                     # Starting playback
                     self.file_player.set_file(self._selected_file)
                     self.file_player.play()
-                    self._update_play_button('pause')
+                    self._update_play_button(PlayButtonState.PAUSE)
                 else:
                     # Pausing playback
                     self.file_player.pause()
-                    self._update_play_button('play')
+                    self._update_play_button(PlayButtonState.PLAY)
             except Exception:
                 pass
 
-    def _update_play_button(self, state: str):
-        """Update play button icon and state. state can be 'play' or 'pause'."""
+    def _update_play_button(self, state: PlayButtonState):
+        """Update play button icon and state."""
         self._play_button_state = state
         self.btn_play.delete('all')
-        if state == 'play':
+        if state == PlayButtonState.PLAY:
             self._draw_play_icon()
         else:
             self._draw_pause_icon()
@@ -200,7 +208,7 @@ class PianoTab():
         if self.file_player is not None:
             try:
                 self.file_player.stop()
-                self._update_play_button('play')
+                self._update_play_button(PlayButtonState.PLAY)
             except Exception:
                 pass
 
