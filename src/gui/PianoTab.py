@@ -57,6 +57,7 @@ class PianoTab():
         self.btn_play.grid(row=1, column=1, padx=4)
         self.btn_play.bind('<Button-1>', lambda e: self._on_play_press(e))
         self.btn_play.bind('<ButtonRelease-1>', lambda e: self._on_play_release(e))
+        self._play_button_state = 'play'
 
         self.btn_stop = tkinter.Canvas(self.controls_frame, width=30, height=30, bg='SystemButtonFace', highlightthickness=0, relief='raised', borderwidth=2)
         self.btn_stop.create_rectangle(8, 8, 22, 22, fill='black', outline='black', tags='stop_icon')
@@ -165,15 +166,41 @@ class PianoTab():
         # ensure file_player knows the file
         if self.file_player is not None:
             try:
-                self.file_player.set_file(self._selected_file)
-                self.file_player.play()
+                if self._play_button_state == 'play':
+                    # Starting playback
+                    self.file_player.set_file(self._selected_file)
+                    self.file_player.play()
+                    self._update_play_button('pause')
+                else:
+                    # Pausing playback
+                    self.file_player.pause()
+                    self._update_play_button('play')
             except Exception:
                 pass
+
+    def _update_play_button(self, state: str):
+        """Update play button icon and state. state can be 'play' or 'pause'."""
+        self._play_button_state = state
+        self.btn_play.delete('all')
+        if state == 'play':
+            self._draw_play_icon()
+        else:
+            self._draw_pause_icon()
+
+    def _draw_play_icon(self):
+        """Draw the play (triangle) icon on the play button canvas."""
+        self.btn_play.create_polygon(10, 5, 10, 25, 25, 15, fill='black', outline='black', tags='play_icon')
+
+    def _draw_pause_icon(self):
+        """Draw the pause (two bars) icon on the play button canvas."""
+        self.btn_play.create_rectangle(10, 5, 13, 25, fill='black', outline='black', tags='pause_icon')
+        self.btn_play.create_rectangle(17, 5, 20, 25, fill='black', outline='black', tags='pause_icon')
 
     def _stop_file(self):
         if self.file_player is not None:
             try:
                 self.file_player.stop()
+                self._update_play_button('play')
             except Exception:
                 pass
 
