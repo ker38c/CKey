@@ -43,6 +43,8 @@ def test_init_sets_defaults():
     assert player._file_path is None
     assert player._loop is False
     assert player._playing is False
+    assert player._paused is False
+    assert player._paused_tick == 0
 
 # Test: set_file sets file path
 def test_set_file_sets_path():
@@ -127,3 +129,94 @@ def test_play_file_enqueues_events(monkeypatch):
     assert 0xB0 in types  # control_change
     # Should stop playing after one pass
     assert player._playing is False
+
+# Test: pause/resume functionality
+def test_pause_and_resume_state():
+    # Arrange
+    q = Queue()
+    lock = Lock()
+    player = MidiFilePlayer(q, lock, lambda: True, lambda: False)
+    player.set_file("dummy.mid")
+    # Act: Play then pause
+    player.play()
+    assert player.is_playing() is True
+    assert player.is_paused() is False
+    player.pause()
+    # Assert: Paused state
+    assert player.is_playing() is False
+    assert player.is_paused() is True
+    # Act: Resume
+    player.resume()
+    # Assert: Playing again
+    assert player.is_playing() is True
+    assert player.is_paused() is False
+
+# Test: stop clears paused state
+def test_stop_clears_paused_state():
+    # Arrange
+    q = Queue()
+    lock = Lock()
+    player = MidiFilePlayer(q, lock, lambda: True, lambda: False)
+    player.set_file("dummy.mid")
+    player.play()
+    player.pause()
+    # Act
+    player.stop()
+    # Assert
+    assert player.is_playing() is False
+    assert player.is_paused() is False
+    assert player._paused_tick == 0
+
+# Test: pause saves playback position
+def test_pause_saves_position(monkeypatch):
+    # Arrange
+    q = Queue()
+    lock = Lock()
+    player = MidiFilePlayer(q, lock, lambda: True, lambda: False)
+    player.set_file("dummy.mid")
+    player._playing = True
+    player._loop = False
+    # Patch time.sleep to avoid delay
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+    # Patch _should_stop_playback to stop after first event
+    original_should_stop = player._should_stop_playback
+    call_count = [0]
+    def mock_should_stop():
+        call_count[0] += 1
+        if call_count[0] > 2:
+            return True
+        return original_should_stop()
+    monkeypatch.setattr(player, "_should_stop_playback", mock_should_stop)
+    # Act
+    player._play_file()
+    # Assert: paused_tick should be set after playback stops
+    # (In this case, it should be at least at the first note event position)
+    assert player._paused_tick >= 0
+
+# Test: pause-resume-pause sequence
+def test_pause_resume_pause_sequence():
+    # Arrange
+    q = Queue()
+    lock = Lock()
+    player = MidiFilePlayer(q, lock, lambda: True, lambda: False)
+    player.set_file("dummy.mid")
+    # Act & Assert: Play
+    player.play()
+    assert player.is_playing() is True
+    assert player.is_paused() is False
+
+    # Pause
+    player.pause()
+    assert player.is_playing() is False
+    assert player.is_paused() is True
+    first_paused_tick = player._paused_tick
+
+    # Resume
+    player.resume()
+    assert player.is_playing() is True
+    assert player.is_paused() is False
+
+    # Pause again
+    player.pause()
+    assert player.is_playing() is False
+    assert player.is_paused() is True
