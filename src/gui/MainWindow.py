@@ -31,6 +31,8 @@ class MainWindow():
         self.piano_tab = PianoTab(self.notebook, setting, midi, file_player, dispatcher=self.dispatcher)
         self.midi_tab = MidiTab(self.notebook, midi)
         self.training_tab = TrainingTab(self.notebook)
+        self.training_tab.load_from_setting(self.setting.training)
+        self.training_tab.set_save_callback(self._on_training_settings_save)
         self.settings_tab = SettingsTab(self.notebook, setting, self)
         self.about_tab = AboutTab(self.notebook)
         self.notebook.add(self.piano_tab.frame, text="Piano")
@@ -100,6 +102,11 @@ class MainWindow():
             self.on_start_training()
         else:
             self.on_stop_training()
+
+    def _on_training_settings_save(self) -> None:
+        """Persist current TrainingTab settings to config file."""
+        self.training_tab.save_to_setting(self.setting.training)
+        self.setting.save_setting()
 
     def on_start_training(self) -> None:
         """Start a Chord Play training session."""

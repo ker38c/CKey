@@ -29,6 +29,38 @@ _SEVENTH_CHORDS = [
     ("Diminished 7th",  ChordLibrary.DIMINISHED_7TH),
 ]
 
+# Maps ChordType.name → TrainingSetting attribute name
+_CHORD_NAME_TO_ATTR = {
+    "Major":           "Major",
+    "Minor":           "Minor",
+    "Augmented":       "Augmented",
+    "Diminished":      "Diminished",
+    "sus2":            "Sus2",
+    "sus4":            "Sus4",
+    "Major 7th":       "Major7th",
+    "Minor 7th":       "Minor7th",
+    "Dominant 7th":    "Dominant7th",
+    "Minor Major 7th": "MinorMajor7th",
+    "Half Diminished": "HalfDiminished",
+    "Diminished 7th":  "Diminished7th",
+}
+
+# Maps root pitch class (0–11) → TrainingSetting attribute name
+_ROOT_IDX_TO_ATTR = {
+    0:  "RootC",
+    1:  "RootCSharp",
+    2:  "RootD",
+    3:  "RootDSharp",
+    4:  "RootE",
+    5:  "RootF",
+    6:  "RootFSharp",
+    7:  "RootG",
+    8:  "RootGSharp",
+    9:  "RootA",
+    10: "RootASharp",
+    11: "RootB",
+}
+
 
 class TrainingTab:
     """Settings-only tab for Training Mode.
@@ -94,6 +126,14 @@ class TrainingTab:
             debounce_frame, textvariable=self._debounce_var, width=6)
         self._debounce_entry.pack(side='left', padx=(6, 0))
 
+        # Save button
+        save_frame = tkinter.Frame(self.frame)
+        save_frame.grid(row=1, column=0, columnspan=2, pady=(0, 10))
+        self._btn_save = tkinter.ttk.Button(save_frame, text="Save", command=self._on_save_clicked)
+        self._btn_save.pack()
+
+        self._save_callback = None
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -118,3 +158,42 @@ class TrainingTab:
             debounce_ms = _DEBOUNCE_DEFAULT
 
         return TrainingSettings(chord_types=chord_types, roots=roots, debounce_ms=debounce_ms)
+
+    def set_save_callback(self, callback) -> None:
+        """Register a callback to invoke when the Save button is clicked."""
+        self._save_callback = callback
+
+    def load_from_setting(self, training_setting) -> None:
+        """Populate the UI checkboxes and debounce field from a persisted TrainingSetting."""
+        for var, chord_type in self._triad_vars + self._seventh_vars:
+            attr = _CHORD_NAME_TO_ATTR.get(chord_type.name)
+            if attr is not None:
+                var.set(getattr(training_setting, attr))
+
+        for var, idx in self._root_vars:
+            attr = _ROOT_IDX_TO_ATTR.get(idx)
+            if attr is not None:
+                var.set(getattr(training_setting, attr))
+
+        self._debounce_var.set(str(training_setting.DebounceMs))
+
+    def save_to_setting(self, training_setting) -> None:
+        """Write the current UI state back to a TrainingSetting instance."""
+        for var, chord_type in self._triad_vars + self._seventh_vars:
+            attr = _CHORD_NAME_TO_ATTR.get(chord_type.name)
+            if attr is not None:
+                setattr(training_setting, attr, var.get())
+
+        for var, idx in self._root_vars:
+            attr = _ROOT_IDX_TO_ATTR.get(idx)
+            if attr is not None:
+                setattr(training_setting, attr, var.get())
+
+        try:
+            training_setting.DebounceMs = int(self._debounce_var.get())
+        except Exception:
+            training_setting.DebounceMs = _DEBOUNCE_DEFAULT
+
+    def _on_save_clicked(self) -> None:
+        if self._save_callback is not None:
+            self._save_callback()
