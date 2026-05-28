@@ -22,6 +22,7 @@ class MidiHandler:
         self.dispatcher = dispatcher
         self.midiout = None
         self.keyboard = None
+        self._training_observer = None
         
         # NOTE_NAME mapping for MIDI key number to note name conversion
         self.NOTE_NAME = [
@@ -73,6 +74,14 @@ class MidiHandler:
         """Set the UI dispatcher for thread-safe UI updates."""
         self.dispatcher = dispatcher
 
+    def set_training_observer(self, observer) -> None:
+        """Register an observer that receives note events during training.
+
+        The observer must implement ``on_note_on(note: int)`` and
+        ``on_note_off(note: int)``. Pass ``None`` to unregister.
+        """
+        self._training_observer = observer
+
     def _handler(self, recv: list):
         """
         Process a MIDI event.
@@ -113,6 +122,12 @@ class MidiHandler:
         if self.dispatcher:
             self.dispatcher.post_to('keyboard', 'set_key_state', key_name_str, tkinter.ACTIVE)
 
+        if self._training_observer is not None:
+            try:
+                self._training_observer.on_note_on(key_name)
+            except Exception as e:
+                print(f"Training observer error (note_on): {e}")
+
     def _note_off(self, key_name: int):
         """
         Handle Note Off event.
@@ -128,6 +143,12 @@ class MidiHandler:
 
         if self.dispatcher:
             self.dispatcher.post_to('keyboard', 'set_key_state', key_name_str, tkinter.NORMAL)
+
+        if self._training_observer is not None:
+            try:
+                self._training_observer.on_note_off(key_name)
+            except Exception as e:
+                print(f"Training observer error (note_off): {e}")
 
     def _sustain_change(self, status: int, value: int):
         """
