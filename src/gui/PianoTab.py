@@ -329,6 +329,17 @@ class PianoTab():
         label = "Stop Training" if is_training else "Start Training"
         self.btn_training.config(text=label)
 
+    def update_training_button_visibility(self) -> None:
+        """Show or hide the Training button based on settings."""
+        try:
+            show = self.setting.gui.EnableTraining
+        except Exception:
+            show = True
+        if show:
+            self.btn_training.grid(row=1, column=4, padx=(16, 4))
+        else:
+            self.btn_training.grid_remove()
+
     def show_training_display(self) -> None:
         """Replace the image canvas with the TrainingDisplay widget."""
         self.image_canvas.pack_forget()

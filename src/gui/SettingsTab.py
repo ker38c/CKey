@@ -66,9 +66,18 @@ class SettingsTab():
         self.check_show_image_frame = tkinter.Checkbutton(self.window_settings_frame, variable=self.var_show_image_frame, command=self._on_show_image_frame_changed)
         self.check_show_image_frame.grid(row=4, column=1)
 
+        # Training mode toggle
+        self.label_enable_training = tkinter.Label(self.window_settings_frame, text="Enable Training mode")
+        self.label_enable_training.grid(row=5, column=0, sticky='w')
+
+        self.var_enable_training = tkinter.BooleanVar()
+        self.var_enable_training.set(setting.gui.EnableTraining)
+        self.check_enable_training = tkinter.Checkbutton(self.window_settings_frame, variable=self.var_enable_training, command=self._on_enable_training_changed)
+        self.check_enable_training.grid(row=5, column=1)
+
         # image above keyboard
         self.label_image = tkinter.Label(self.window_settings_frame, text="Image")
-        self.label_image.grid(row=5, column=0, sticky='w')
+        self.label_image.grid(row=6, column=0, sticky='w')
 
         self._image_name = tkinter.StringVar()
         try:
@@ -76,10 +85,10 @@ class SettingsTab():
         except Exception:
             self._image_name.set("No image")
         self.label_image_name = tkinter.Label(self.window_settings_frame, textvariable=self._image_name, width=40, anchor='w')
-        self.label_image_name.grid(row=5, column=1, columnspan=2, sticky='w')
+        self.label_image_name.grid(row=6, column=1, columnspan=2, sticky='w')
 
         self.btn_choose_image = tkinter.Button(self.window_settings_frame, text="Choose Image", command=self._choose_image)
-        self.btn_choose_image.grid(row=6, column=0, sticky='w')
+        self.btn_choose_image.grid(row=7, column=0, sticky='w')
 
         self.button_apply = tkinter.Button(self.frame, text="Save", command=self._on_save_button_click)
         self.button_apply.grid(row=1, column=0, columnspan=3, pady=10)
@@ -97,6 +106,8 @@ class SettingsTab():
         self.main_window.apply_window_size(self.setting.gui.Width, self.setting.gui.Height)
         # Update MIDI file controls visibility
         self.main_window.update_midi_file_visibility()
+        # Update training button visibility
+        self.main_window.update_training_button_visibility()
         # Update image frame visibility and image content
         self.main_window.update_image_frame_visibility()
         try:
@@ -130,6 +141,12 @@ class SettingsTab():
     def _on_enable_midi_file_changed(self):
         try:
             self.setting.gui.EnableMidiFile = self.var_enable_midi_file.get()
+        except:
+            pass
+
+    def _on_enable_training_changed(self):
+        try:
+            self.setting.gui.EnableTraining = self.var_enable_training.get()
         except:
             pass
 

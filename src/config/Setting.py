@@ -7,11 +7,12 @@ DEFAULT_WIDTH = 1280
 
 MIN_HEIGHT = 200
 MAX_HEIGHT = 4000
-DEFAULT_HEIGHT = 400
+DEFAULT_HEIGHT = 600
 
 DEFAULT_KEY_PUSHED_COLOR = "lightblue"
 DEFAULT_ENABLE_MIDI_FILE = True
 DEFAULT_SHOW_IMAGE_FRAME = True
+DEFAULT_ENABLE_TRAINING = True
 
 def round(value, min_value, max_value):
     return max(min_value, min(value, max_value))
@@ -24,6 +25,7 @@ class GuiSetting():
         self._enable_midi_file = DEFAULT_ENABLE_MIDI_FILE
         self._image_path = ""
         self._show_image_frame = DEFAULT_SHOW_IMAGE_FRAME
+        self._enable_training = DEFAULT_ENABLE_TRAINING
 
     @property
     def Width(self):
@@ -93,6 +95,19 @@ class GuiSetting():
             self._show_image_frame = bool(value)
 
     @property
+    def EnableTraining(self):
+        return self._enable_training
+
+    @EnableTraining.setter
+    def EnableTraining(self, value):
+        if isinstance(value, bool):
+            self._enable_training = value
+        elif isinstance(value, str):
+            self._enable_training = value.lower() in ('true', '1', 'yes')
+        else:
+            self._enable_training = bool(value)
+
+    @property
     def ImagePath(self):
         return self._image_path
 
@@ -156,7 +171,8 @@ class Setting():
             "KeyPushedColor": str(DEFAULT_KEY_PUSHED_COLOR),
             "EnableMidiFile": str(DEFAULT_ENABLE_MIDI_FILE),
             "ImagePath": "",
-            "ShowImageFrame": str(DEFAULT_SHOW_IMAGE_FRAME)
+            "ShowImageFrame": str(DEFAULT_SHOW_IMAGE_FRAME),
+            "EnableTraining": str(DEFAULT_ENABLE_TRAINING)
         }
 
         with open(self.CONFIG_FILE, mode="w", encoding="utf-8") as file:
@@ -171,6 +187,7 @@ class Setting():
         self.gui.EnableMidiFile = self.parser["GUI"].get("EnableMidiFile", str(DEFAULT_ENABLE_MIDI_FILE))
         self.gui.ImagePath = self.parser["GUI"].get("ImagePath", "")
         self.gui.ShowImageFrame = self.parser["GUI"].get("ShowImageFrame", str(DEFAULT_SHOW_IMAGE_FRAME))
+        self.gui.EnableTraining = self.parser["GUI"].get("EnableTraining", str(DEFAULT_ENABLE_TRAINING))
 
     def save_setting(self):
         with open(self.CONFIG_FILE, 'w', encoding='utf-8') as file:
@@ -180,4 +197,5 @@ class Setting():
             self.parser["GUI"]["EnableMidiFile"] = str(self.gui.EnableMidiFile)
             self.parser["GUI"]["ImagePath"] = self.gui.ImagePath
             self.parser["GUI"]["ShowImageFrame"] = str(self.gui.ShowImageFrame)
+            self.parser["GUI"]["EnableTraining"] = str(self.gui.EnableTraining)
             self.parser.write(file)

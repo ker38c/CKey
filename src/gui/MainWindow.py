@@ -48,6 +48,7 @@ class MainWindow():
 
         # Apply visibility preferences on startup
         self.update_image_frame_visibility()
+        self.update_training_button_visibility()
 
         self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
 
@@ -66,6 +67,12 @@ class MainWindow():
     def update_image_frame_visibility(self):
         """Update image frame visibility."""
         self.piano_tab.update_image_frame_visibility()
+
+    def update_training_button_visibility(self) -> None:
+        """Update Training button visibility; stop training if the button is now hidden."""
+        if not self.setting.gui.EnableTraining and self._chord_play_mode.is_active:
+            self.on_stop_training()
+        self.piano_tab.update_training_button_visibility()
 
     def _resize(self, width: int, height: int):
         """Resize the main window."""
