@@ -3,7 +3,9 @@ import tkinter.ttk
 from tkinter import filedialog
 import os
 from enum import Enum
+from typing import Callable, List, Optional
 from gui.piano.KeyBoard import KeyBoard
+from gui.TrainingDisplay import TrainingDisplay
 from config.Setting import Setting
 from midi.MidiController import MidiController
 try:
@@ -73,6 +75,20 @@ class PianoTab():
         self.btn_stop.bind('<Button-1>', lambda e: self._on_stop_press(e))
         self.btn_stop.bind('<ButtonRelease-1>', lambda e: self._on_stop_release(e))
 
+        # Training start/stop button (always visible on the right of controls)
+        self._is_training: bool = False
+        self._training_callback: Optional[Callable[[bool], None]] = None
+        self.btn_training = tkinter.Button(
+            self.controls_frame, text="Start Training", width=14,
+            command=self._on_training_clicked)
+        self.btn_training.grid(row=1, column=4, padx=(16, 4))
+
+        # TrainingDisplay overlays image_frame during a training session (hidden initially)
+        self._training_display = TrainingDisplay(self.image_frame)
+
+        # Saved grid info for MIDI-file widgets so they can be restored after hide
+        self._midi_file_widget_grid_info: dict = {}
+
         # Apply initial visibility based on settings
         self.update_midi_file_visibility()
         self.update_image_frame_visibility()
@@ -80,10 +96,14 @@ class PianoTab():
         # Load initial image if configured
         self.update_image_from_setting()
 
-        # Register keyboard with dispatcher for name-based calls
+        # Register keyboard and piano_tab with dispatcher for name-based calls
         if dispatcher is not None:
             try:
                 dispatcher.register('keyboard', self.keyboard)
+            except Exception:
+                pass
+            try:
+                dispatcher.register('piano_tab', self)
             except Exception:
                 pass
 
@@ -92,25 +112,12 @@ class PianoTab():
         self.keyboard.resize_keyboard(width, height)
 
     def update_image_from_setting(self):
-        path = None
-        try:
-            path = self.setting.gui.ImagePath
-        except Exception:
-            path = None
-
+        path = self._get_image_path()
         if not path or not os.path.isfile(path) or Image is None:
             self._image_original = None
             self._image_tk = None
-            try:
-                self.image_canvas.delete('all')
-                w = max(1, self.image_canvas.winfo_width())
-                h = max(1, self.image_canvas.winfo_height())
-                msg = "Install Pillow to show images" if Image is None else "No image selected"
-                self.image_canvas.create_text(w // 2, h // 2, text=msg, fill='gray')
-            except Exception:
-                pass
+            self._show_canvas_placeholder("No image selected")
             return
-
         try:
             self._image_original = Image.open(path)
         except Exception:
@@ -125,16 +132,48 @@ class PianoTab():
             pass
 
     def update_midi_file_visibility(self):
-        """Update the visibility of MIDI file controls based on settings"""
+        """Show or hide the MIDI file controls based on settings.
+
+        The controls_frame itself is always kept visible because the
+        Training start/stop button lives there regardless of this setting.
+        """
         try:
-            if self.setting.gui.EnableMidiFile:
-                self.controls_frame.grid(row=2, column=0, pady=8)
-            else:
-                self.controls_frame.grid_remove()
+            show = self.setting.gui.EnableMidiFile
         except Exception as e:
-            print(f"Error updating MIDI file visibility: {e}")
-            # If setting doesn't exist, show controls by default
-            self.controls_frame.grid(row=2, column=0, pady=8)
+            print(f"Error reading MIDI file setting: {e}")
+            show = True
+
+        midi_widgets = [self.file_label, self.btn_choose, self.btn_play, self.btn_stop]
+        if show:
+            self._restore_midi_widgets(midi_widgets)
+        else:
+            self._save_and_hide_midi_widgets(midi_widgets)
+
+        # Always keep the controls_frame in the layout
+        self.controls_frame.grid(row=2, column=0, pady=8)
+
+    def _restore_midi_widgets(self, midi_widgets: list) -> None:
+        """Restore MIDI file widgets to their saved grid positions."""
+        for widget in midi_widgets:
+            saved = self._midi_file_widget_grid_info.get(id(widget))
+            if saved:
+                try:
+                    widget.grid(**saved)
+                except Exception:
+                    pass
+
+    def _save_and_hide_midi_widgets(self, midi_widgets: list) -> None:
+        """Save grid positions of MIDI file widgets and remove them from the layout."""
+        for widget in midi_widgets:
+            try:
+                info = widget.grid_info()
+                if info:
+                    self._midi_file_widget_grid_info[id(widget)] = {
+                        k: v for k, v in info.items() if k != 'in'
+                    }
+                widget.grid_remove()
+            except Exception:
+                pass
 
     def update_image_frame_visibility(self):
         """Show or hide the image frame based on settings."""
@@ -212,20 +251,29 @@ class PianoTab():
             except Exception:
                 pass
 
-    def _redraw_image(self, event):
-        if self._image_original is None or ImageOps is None or ImageTk is None:
-            try:
-                self.image_canvas.delete('all')
-                w = max(1, self.image_canvas.winfo_width())
-                h = max(1, self.image_canvas.winfo_height())
-                msg = "Install Pillow to show images" if (ImageOps is None or ImageTk is None) else "No image"
-                self.image_canvas.create_text(w // 2, h // 2, text=msg, fill='gray')
-            except Exception:
-                pass
-            return
+    def _get_image_path(self) -> Optional[str]:
+        """Return the configured image path, or None on error."""
+        try:
+            return self.setting.gui.ImagePath
+        except Exception:
+            return None
 
-        w = max(1, self.image_canvas.winfo_width())
-        h = max(1, self.image_canvas.winfo_height())
+    def _show_canvas_placeholder(self, no_image_msg: str = "No image") -> None:
+        """Display placeholder text on the image canvas."""
+        try:
+            self.image_canvas.delete('all')
+            w = max(1, self.image_canvas.winfo_width())
+            h = max(1, self.image_canvas.winfo_height())
+            if ImageOps is None or ImageTk is None:
+                msg = "Install Pillow to show images"
+            else:
+                msg = no_image_msg
+            self.image_canvas.create_text(w // 2, h // 2, text=msg, fill='gray')
+        except Exception:
+            pass
+
+    def _draw_image_on_canvas(self, w: int, h: int) -> None:
+        """Fit and draw self._image_original onto the canvas."""
         # Provide a small margin so the image doesn't touch edges
         pad = 8
         target_w = max(1, w - pad * 2)
@@ -241,6 +289,14 @@ class PianoTab():
             except Exception:
                 pass
 
+    def _redraw_image(self, event):
+        if self._image_original is None or ImageOps is None or ImageTk is None:
+            self._show_canvas_placeholder()
+            return
+        w = max(1, self.image_canvas.winfo_width())
+        h = max(1, self.image_canvas.winfo_height())
+        self._draw_image_on_canvas(w, h)
+
     def _on_play_press(self, event):
         self.btn_play.config(relief='sunken')
 
@@ -254,3 +310,78 @@ class PianoTab():
     def _on_stop_release(self, event):
         self.btn_stop.config(relief='raised')
         self._stop_file()
+
+    # ------------------------------------------------------------------
+    # Training mode helpers (called on main thread via UiDispatcher)
+    # ------------------------------------------------------------------
+
+    def set_training_callback(self, callback: Callable[[bool], None]) -> None:
+        """Set the callback invoked when the training button is clicked.
+
+        The callback receives ``True`` when starting training and ``False``
+        when stopping.
+        """
+        self._training_callback = callback
+
+    def set_training_button_mode(self, is_training: bool) -> None:
+        """Switch the training button label between Start and Stop."""
+        self._is_training = is_training
+        label = "Stop Training" if is_training else "Start Training"
+        self.btn_training.config(text=label)
+
+    def update_training_button_visibility(self) -> None:
+        """Show or hide the Training button based on settings."""
+        try:
+            show = self.setting.gui.EnableTraining
+        except Exception:
+            show = True
+        if show:
+            self.btn_training.grid(row=1, column=4, padx=(16, 4))
+        else:
+            self.btn_training.grid_remove()
+
+    def show_training_display(self) -> None:
+        """Replace the image canvas with the TrainingDisplay widget."""
+        self.image_canvas.pack_forget()
+        self._training_display.pack(fill=tkinter.BOTH, expand=True)
+
+    def hide_training_display(self) -> None:
+        """Restore the image canvas, hiding the TrainingDisplay."""
+        self._training_display.pack_forget()
+        self.image_canvas.pack(fill=tkinter.BOTH, expand=True)
+        self.refresh_image()
+
+    def highlight_answer_notes(self, key_names: List[str]) -> None:
+        """Activate (highlight) a set of keyboard keys to show the answer."""
+        for name in key_names:
+            try:
+                self.keyboard.set_key_state(name, tkinter.ACTIVE)
+            except Exception:
+                pass
+
+    def clear_answer_highlights(self, key_names: List[str]) -> None:
+        """Deactivate previously highlighted answer keys."""
+        for name in key_names:
+            try:
+                self.keyboard.set_key_state(name, tkinter.NORMAL)
+            except Exception:
+                pass
+
+    def set_midi_playback_enabled(self, enabled: bool) -> None:
+        """Enable or visually disable the MIDI file play button."""
+        icon_color = 'black' if enabled else '#aaaaaa'
+        for tag in ('play_icon', 'pause_icon'):
+            try:
+                self.btn_play.itemconfigure(tag, fill=icon_color, outline=icon_color)
+            except Exception:
+                pass
+        if enabled:
+            self.btn_play.bind('<Button-1>', lambda e: self._on_play_press(e))
+            self.btn_play.bind('<ButtonRelease-1>', lambda e: self._on_play_release(e))
+        else:
+            self.btn_play.unbind('<Button-1>')
+            self.btn_play.unbind('<ButtonRelease-1>')
+
+    def _on_training_clicked(self) -> None:
+        if self._training_callback is not None:
+            self._training_callback(not self._is_training)
