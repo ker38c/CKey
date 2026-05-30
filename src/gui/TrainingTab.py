@@ -8,7 +8,8 @@ _DEBOUNCE_MIN = 10
 _DEBOUNCE_MAX = 500
 _DEBOUNCE_DEFAULT = 100
 
-_ROOT_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+_ROOT_NAMES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+_ROOT_NAMES_FLAT  = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 
 # Mapping: display name → ChordType object
 _TRIADS = [
@@ -107,13 +108,28 @@ class TrainingTab:
         root_frame = tkinter.LabelFrame(right, text="Root Notes", padx=10, pady=6)
         root_frame.pack(fill='x', pady=(0, 6))
 
+        # Sharp / Flat notation toggle
+        notation_bar = tkinter.Frame(root_frame)
+        notation_bar.grid(row=0, column=0, columnspan=3, sticky='w', pady=(0, 4))
+        self._use_flat_var = tkinter.BooleanVar(value=False)
+        tkinter.Radiobutton(
+            notation_bar, text="#", variable=self._use_flat_var,
+            value=False, command=self._on_notation_changed,
+        ).pack(side='left')
+        tkinter.Radiobutton(
+            notation_bar, text="b", variable=self._use_flat_var,
+            value=True, command=self._on_notation_changed,
+        ).pack(side='left')
+
         self._root_vars = []
-        for idx, name in enumerate(_ROOT_NAMES):
+        self._root_checkbuttons = []
+        for idx, name in enumerate(_ROOT_NAMES_SHARP):
             var = tkinter.BooleanVar(value=True)
             row, col = divmod(idx, 3)
             cb = tkinter.Checkbutton(root_frame, text=name, variable=var, width=4)
-            cb.grid(row=row, column=col, sticky='w')
+            cb.grid(row=row + 1, column=col, sticky='w')
             self._root_vars.append((var, idx))
+            self._root_checkbuttons.append(cb)
 
         # Debounce entry
         debounce_frame = tkinter.Frame(right)
@@ -157,7 +173,12 @@ class TrainingTab:
         except (ValueError, TypeError):
             debounce_ms = _DEBOUNCE_DEFAULT
 
-        return TrainingSettings(chord_types=chord_types, roots=roots, debounce_ms=debounce_ms)
+        return TrainingSettings(
+            chord_types=chord_types,
+            roots=roots,
+            debounce_ms=debounce_ms,
+            use_flat=self._use_flat_var.get(),
+        )
 
     def set_save_callback(self, callback) -> None:
         """Register a callback to invoke when the Save button is clicked."""
@@ -175,6 +196,9 @@ class TrainingTab:
             if attr is not None:
                 var.set(getattr(training_setting, attr))
 
+        self._use_flat_var.set(training_setting.UseFlat)
+        self._apply_notation_labels()
+
         self._debounce_var.set(str(training_setting.DebounceMs))
 
     def save_to_setting(self, training_setting) -> None:
@@ -189,10 +213,22 @@ class TrainingTab:
             if attr is not None:
                 setattr(training_setting, attr, var.get())
 
+        training_setting.UseFlat = self._use_flat_var.get()
+
         try:
             training_setting.DebounceMs = int(self._debounce_var.get())
         except Exception:
             training_setting.DebounceMs = _DEBOUNCE_DEFAULT
+
+    def _on_notation_changed(self) -> None:
+        """Update checkbox labels when the sharp/flat toggle changes."""
+        self._apply_notation_labels()
+
+    def _apply_notation_labels(self) -> None:
+        """Set checkbox text to sharp or flat names based on the current toggle."""
+        names = _ROOT_NAMES_FLAT if self._use_flat_var.get() else _ROOT_NAMES_SHARP
+        for cb, (_, idx) in zip(self._root_checkbuttons, self._root_vars):
+            cb.config(text=names[idx])
 
     def _on_save_clicked(self) -> None:
         if self._save_callback is not None:

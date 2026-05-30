@@ -7,6 +7,7 @@ from typing import List, Optional
 from training.ChordDefinition import ChordType
 
 ROOT_NAMES: List[str] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+ROOT_NAMES_FLAT: List[str] = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 
 # MIDI note number to key name used by the KeyBoard component.
 # This app uses Yamaha convention: MIDI 60 = C3.
@@ -24,8 +25,21 @@ class ChordQuestion:
 
     @property
     def display_name(self) -> str:
-        """Human-readable chord name, e.g. 'C', 'Cm', 'CM7'."""
+        """Human-readable chord name using sharp notation, e.g. 'C', 'C#m', 'C#M7'."""
         root_name = ROOT_NAMES[self.root]
+        if self.chord_type.symbol == "":
+            return root_name
+        return f"{root_name}{self.chord_type.symbol}"
+
+    def get_display_name(self, use_flat: bool = False) -> str:
+        """Human-readable chord name with selectable notation.
+
+        Args:
+            use_flat: When True, accidentals are shown as flats (e.g. 'Db').
+                      When False (default), accidentals are shown as sharps (e.g. 'C#').
+        """
+        names = ROOT_NAMES_FLAT if use_flat else ROOT_NAMES
+        root_name = names[self.root]
         if self.chord_type.symbol == "":
             return root_name
         return f"{root_name}{self.chord_type.symbol}"

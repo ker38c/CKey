@@ -136,7 +136,7 @@ class MainWindow():
         self.piano_tab.set_training_button_mode(True)
 
         # Start the mode
-        self._chord_play_mode.start(settings.chord_types, settings.roots)
+        self._chord_play_mode.start(settings.chord_types, settings.roots, settings.use_flat)
 
     def on_stop_training(self) -> None:
         """Stop the current Chord Play training session."""

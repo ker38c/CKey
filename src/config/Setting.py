@@ -189,6 +189,7 @@ class TrainingSetting():
         self.RootA: bool = True
         self.RootASharp: bool = True
         self.RootB: bool = True
+        self.UseFlat: bool = False
 
         self._debounce_ms: int = DEFAULT_TRAINING_DEBOUNCE_MS
 
@@ -259,6 +260,7 @@ class Setting():
             "A": str(True),
             "ASharp": str(True),
             "B": str(True),
+            "UseFlat": str(False),
         }
 
         with open(self.CONFIG_FILE, mode="w", encoding="utf-8") as file:
@@ -304,6 +306,7 @@ class Setting():
             self.training.RootA = r.getboolean("A", True)
             self.training.RootASharp = r.getboolean("ASharp", True)
             self.training.RootB = r.getboolean("B", True)
+            self.training.UseFlat = r.getboolean("UseFlat", False)
 
     def save_setting(self):
         with open(self.CONFIG_FILE, 'w', encoding='utf-8') as file:
@@ -345,4 +348,5 @@ class Setting():
             self.parser["Training.Roots"]["A"] = str(self.training.RootA)
             self.parser["Training.Roots"]["ASharp"] = str(self.training.RootASharp)
             self.parser["Training.Roots"]["B"] = str(self.training.RootB)
+            self.parser["Training.Roots"]["UseFlat"] = str(self.training.UseFlat)
             self.parser.write(file)

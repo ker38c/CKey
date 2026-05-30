@@ -38,6 +38,7 @@ class ChordPlayMode:
         self._current_question: Optional[ChordQuestion] = None
         self._chord_types: List[ChordType] = []
         self._roots: List[int] = []
+        self._use_flat: bool = False
         self._correct: int = 0
         self._total: int = 0
         self._debouncer: Optional[NoteDebouncer] = None
@@ -47,7 +48,7 @@ class ChordPlayMode:
     # Public API
     # ------------------------------------------------------------------
 
-    def start(self, chord_types: List[ChordType], roots: List[int]) -> None:
+    def start(self, chord_types: List[ChordType], roots: List[int], use_flat: bool = False) -> None:
         """Start a new training session with the given settings.
 
         Resets the score and generates the first question.
@@ -60,6 +61,7 @@ class ChordPlayMode:
                 return
             self._chord_types = list(chord_types)
             self._roots = list(roots)
+            self._use_flat = use_flat
             self._correct = 0
             self._total = 0
             self._state = _STATE_WAITING
@@ -121,7 +123,7 @@ class ChordPlayMode:
             if self._debouncer is not None:
                 self._debouncer.reset()
 
-        self._dispatcher.post_to('training_display', 'show_question', question.display_name)
+        self._dispatcher.post_to('training_display', 'show_question', question.get_display_name(self._use_flat))
 
     def _on_stable(self, pressed_pitch_classes: FrozenSet[int]) -> None:
         """Called by NoteDebouncer when the pressed set has been stable for debounce_ms."""
