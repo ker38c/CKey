@@ -1,6 +1,7 @@
 import tkinter
 from queue import Queue, Empty
-from threading import Lock
+from threading import Lock, Timer
+from typing import List, Optional
 
 
 class MidiHandler:
@@ -23,6 +24,9 @@ class MidiHandler:
         self.midiout = None
         self.keyboard = None
         self._training_observer = None
+        self._chord_lock = Lock()
+        self._chord_notes: List[int] = []
+        self._chord_timer: Optional[Timer] = None
         
         # NOTE_NAME mapping for MIDI key number to note name conversion
         self.NOTE_NAME = [
@@ -169,3 +173,55 @@ class MidiHandler:
         if (key_num < 0) or (key_num >= 128):
             return ""
         return self.NOTE_NAME[key_num]
+
+    # ------------------------------------------------------------------
+    # Chord playback (Hearing mode) — no keyboard UI update
+    # ------------------------------------------------------------------
+
+    def play_chord(self, midi_notes: List[int], velocity: int = 80, duration_s: float = 0.5) -> None:
+        """Send note_on for all notes and schedule note_off after duration_s.
+
+        Does not update the keyboard display.
+        """
+        with self._chord_lock:
+            if self._chord_timer is not None:
+                self._chord_timer.cancel()
+                self._chord_timer = None
+            self._send_chord_note_off()
+            self._chord_notes = list(midi_notes)
+            if self.midiout is None or not self._chord_notes:
+                return
+            for note in self._chord_notes:
+                try:
+                    self.midiout.note_on(note=note, velocity=velocity)
+                except Exception as e:
+                    print(f"MidiHandler.play_chord: note_on error: {e}")
+            t = Timer(duration_s, self._on_chord_timer)
+            self._chord_timer = t
+        t.start()
+
+    def stop_chord(self) -> None:
+        """Cancel any playing chord and send note_off for all chord notes."""
+        with self._chord_lock:
+            if self._chord_timer is not None:
+                self._chord_timer.cancel()
+                self._chord_timer = None
+            self._send_chord_note_off()
+            self._chord_notes = []
+
+    def _send_chord_note_off(self) -> None:
+        """Send note_off for current chord notes. Must be called with _chord_lock held."""
+        if self.midiout is None:
+            return
+        for note in self._chord_notes:
+            try:
+                self.midiout.note_off(note=note)
+            except Exception as e:
+                print(f"MidiHandler.stop_chord: note_off error: {e}")
+
+    def _on_chord_timer(self) -> None:
+        """Timer callback: send note_off for chord notes."""
+        with self._chord_lock:
+            self._chord_timer = None
+            self._send_chord_note_off()
+            self._chord_notes = []

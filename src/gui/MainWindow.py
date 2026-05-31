@@ -1,5 +1,6 @@
 import tkinter
 import tkinter.ttk
+from typing import Optional, Union
 from gui.PianoTab import PianoTab
 from gui.SettingsTab import SettingsTab
 from gui.MidiTab import MidiTab
@@ -10,6 +11,8 @@ from config.Setting import Setting
 from midi.MidiController import MidiController
 from gui.UiDispatcher import UiDispatcher
 from training.ChordPlayMode import ChordPlayMode
+from training.HearingMode import HearingMode
+from training.TrainingMode import TrainingMode
 
 class MainWindow():
     def __init__(self, root: tkinter.Tk, setting: Setting, midi: MidiController, file_player, dispatcher: UiDispatcher):
@@ -42,7 +45,7 @@ class MainWindow():
         self.notebook.add(self.about_tab.frame, text="About")
 
         # Training mode coordinator
-        self._chord_play_mode: ChordPlayMode = ChordPlayMode(dispatcher)
+        self._active_mode: Optional[Union[ChordPlayMode, HearingMode]] = None
         self.piano_tab.set_training_callback(self._on_training_button_clicked)
 
         # Register TrainingDisplay with dispatcher
@@ -72,7 +75,7 @@ class MainWindow():
 
     def update_training_button_visibility(self) -> None:
         """Update Training button visibility; stop training if the button is now hidden."""
-        if not self.setting.gui.EnableTraining and self._chord_play_mode.is_active:
+        if not self.setting.gui.EnableTraining and self._active_mode is not None and self._active_mode.is_active:
             self.on_stop_training()
         self.piano_tab.update_training_button_visibility()
 
@@ -88,7 +91,7 @@ class MainWindow():
                 self.piano_tab.refresh_image()
             else:
                 # Stop training when navigating away from Piano tab
-                if self._chord_play_mode.is_active:
+                if self._active_mode is not None and self._active_mode.is_active:
                     self.on_stop_training()
         except Exception:
             pass
@@ -109,13 +112,10 @@ class MainWindow():
         self.setting.save_setting()
 
     def on_start_training(self) -> None:
-        """Start a Chord Play training session."""
+        """Start a training session (Chord Play or Hearing) based on current settings."""
         settings = self.training_tab.get_settings()
         if not settings.chord_types or not settings.roots:
             return
-
-        # Update debounce setting on the mode
-        self._chord_play_mode = ChordPlayMode(self.dispatcher, settings.debounce_ms)
 
         # Pause MIDI file playback if active
         if self.file_player is not None and self.file_player.is_playing():
@@ -124,9 +124,20 @@ class MainWindow():
             except Exception:
                 pass
 
+        if settings.mode == TrainingMode.HEARING:
+            mode = HearingMode(self.dispatcher, self.midi.handler, settings.debounce_ms)
+            self._active_mode = mode
+            # Configure Listen Again button
+            self.piano_tab._training_display.set_listen_again_callback(mode.replay)
+            self.piano_tab._training_display.set_listen_again_visible(True)
+            self.piano_tab._training_display.set_listen_again_enabled(True)
+        else:
+            mode = ChordPlayMode(self.dispatcher, settings.debounce_ms)
+            self._active_mode = mode
+
         # Register observer with MidiHandler
         try:
-            self.midi.handler.set_training_observer(self._chord_play_mode)
+            self.midi.handler.set_training_observer(self._active_mode)
         except Exception:
             pass
 
@@ -136,12 +147,12 @@ class MainWindow():
         self.piano_tab.set_training_button_mode(True)
 
         # Start the mode
-        self._chord_play_mode.start(settings.chord_types, settings.roots, settings.use_flat)
+        self._active_mode.start(settings.chord_types, settings.roots, settings.use_flat)
 
     def on_stop_training(self) -> None:
-        """Stop the current Chord Play training session."""
-        # Stop the mode (cancels timers)
-        self._chord_play_mode.stop()
+        """Stop the current training session."""
+        if self._active_mode is not None:
+            self._active_mode.stop()
 
         # Unregister observer
         try:
@@ -149,8 +160,13 @@ class MainWindow():
         except Exception:
             pass
 
+        # Hide Listen Again button
+        self.piano_tab._training_display.set_listen_again_visible(False)
+
         # Restore Piano tab UI
         self.piano_tab.set_midi_playback_enabled(True)
         self.piano_tab.hide_training_display()
         self.piano_tab.set_training_button_mode(False)
         self.piano_tab._training_display.reset()
+
+        self._active_mode = None
