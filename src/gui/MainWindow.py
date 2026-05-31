@@ -12,7 +12,7 @@ from midi.MidiController import MidiController
 from gui.UiDispatcher import UiDispatcher
 from training.ChordPlayMode import ChordPlayMode
 from training.HearingMode import HearingMode
-from training.TrainingMode import TrainingMode
+from training.SessionMode import SessionMode
 
 class MainWindow():
     def __init__(self, root: tkinter.Tk, setting: Setting, midi: MidiController, file_player, dispatcher: UiDispatcher):
@@ -124,7 +124,7 @@ class MainWindow():
             except Exception:
                 pass
 
-        if settings.mode == TrainingMode.HEARING:
+        if settings.mode == SessionMode.HEARING:
             mode = HearingMode(self.dispatcher, self.midi.handler, settings.debounce_ms)
             self._active_mode = mode
             # Configure Listen Again button

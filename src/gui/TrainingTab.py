@@ -2,7 +2,7 @@ import tkinter
 import tkinter.ttk
 
 from training import ChordLibrary
-from training.TrainingMode import TrainingMode
+from training.SessionMode import SessionMode
 from training.TrainingSettings import TrainingSettings
 
 _DEBOUNCE_MIN = 10
@@ -80,14 +80,14 @@ class TrainingTab:
         mode_frame = tkinter.LabelFrame(self.frame, text="Mode", padx=10, pady=6)
         mode_frame.grid(row=0, column=0, columnspan=2, sticky='ew', padx=10, pady=(10, 0))
 
-        self._mode_var = tkinter.StringVar(value=TrainingMode.CHORD_PLAY.value)
+        self._mode_var = tkinter.StringVar(value=SessionMode.CHORD_PLAY.value)
         tkinter.Radiobutton(
             mode_frame, text="Chord Play",
-            variable=self._mode_var, value=TrainingMode.CHORD_PLAY.value,
+            variable=self._mode_var, value=SessionMode.CHORD_PLAY.value,
         ).pack(side='left', padx=(0, 16))
         tkinter.Radiobutton(
             mode_frame, text="Hearing",
-            variable=self._mode_var, value=TrainingMode.HEARING.value,
+            variable=self._mode_var, value=SessionMode.HEARING.value,
         ).pack(side='left')
 
         # ---- Left column: chord type frames ----
@@ -193,7 +193,7 @@ class TrainingTab:
             roots=roots,
             debounce_ms=debounce_ms,
             use_flat=self._use_flat_var.get(),
-            mode=TrainingMode(self._mode_var.get()),
+            mode=SessionMode(self._mode_var.get()),
         )
 
     def set_save_callback(self, callback) -> None:
