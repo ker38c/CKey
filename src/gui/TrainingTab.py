@@ -2,6 +2,7 @@ import tkinter
 import tkinter.ttk
 
 from training import ChordLibrary
+from training.TrainingMode import TrainingMode
 from training.TrainingSettings import TrainingSettings
 
 _DEBOUNCE_MIN = 10
@@ -75,9 +76,23 @@ class TrainingTab:
         self.frame.columnconfigure(0, weight=1)
         self.frame.columnconfigure(1, weight=1)
 
+        # ---- Row 0: Mode selection ----
+        mode_frame = tkinter.LabelFrame(self.frame, text="Mode", padx=10, pady=6)
+        mode_frame.grid(row=0, column=0, columnspan=2, sticky='ew', padx=10, pady=(10, 0))
+
+        self._mode_var = tkinter.StringVar(value=TrainingMode.CHORD_PLAY.value)
+        tkinter.Radiobutton(
+            mode_frame, text="Chord Play",
+            variable=self._mode_var, value=TrainingMode.CHORD_PLAY.value,
+        ).pack(side='left', padx=(0, 16))
+        tkinter.Radiobutton(
+            mode_frame, text="Hearing",
+            variable=self._mode_var, value=TrainingMode.HEARING.value,
+        ).pack(side='left')
+
         # ---- Left column: chord type frames ----
         left = tkinter.Frame(self.frame)
-        left.grid(row=0, column=0, sticky='nsew', padx=(10, 5), pady=10)
+        left.grid(row=1, column=0, sticky='nsew', padx=(10, 5), pady=10)
 
         # 3-note chords
         triad_frame = tkinter.LabelFrame(left, text="Chord Types (3-note)", padx=10, pady=6)
@@ -103,7 +118,7 @@ class TrainingTab:
 
         # ---- Right column: root notes + debounce ----
         right = tkinter.Frame(self.frame)
-        right.grid(row=0, column=1, sticky='nsew', padx=(5, 10), pady=10)
+        right.grid(row=1, column=1, sticky='nsew', padx=(5, 10), pady=10)
 
         root_frame = tkinter.LabelFrame(right, text="Root Notes", padx=10, pady=6)
         root_frame.pack(fill='x', pady=(0, 6))
@@ -144,7 +159,7 @@ class TrainingTab:
 
         # Save button
         save_frame = tkinter.Frame(self.frame)
-        save_frame.grid(row=1, column=0, columnspan=2, pady=(0, 10))
+        save_frame.grid(row=2, column=0, columnspan=2, pady=(0, 10))
         self._btn_save = tkinter.ttk.Button(save_frame, text="Save", command=self._on_save_clicked)
         self._btn_save.pack()
 
@@ -178,6 +193,7 @@ class TrainingTab:
             roots=roots,
             debounce_ms=debounce_ms,
             use_flat=self._use_flat_var.get(),
+            mode=TrainingMode(self._mode_var.get()),
         )
 
     def set_save_callback(self, callback) -> None:
@@ -199,6 +215,8 @@ class TrainingTab:
         self._use_flat_var.set(training_setting.UseFlat)
         self._apply_notation_labels()
 
+        self._mode_var.set(training_setting.Mode)
+
         self._debounce_var.set(str(training_setting.DebounceMs))
 
     def save_to_setting(self, training_setting) -> None:
@@ -214,6 +232,7 @@ class TrainingTab:
                 setattr(training_setting, attr, var.get())
 
         training_setting.UseFlat = self._use_flat_var.get()
+        training_setting.Mode = self._mode_var.get()
 
         try:
             training_setting.DebounceMs = int(self._debounce_var.get())

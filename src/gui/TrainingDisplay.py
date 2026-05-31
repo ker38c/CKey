@@ -19,7 +19,8 @@ class TrainingDisplay(tkinter.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=0)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(2, weight=0)
+        self.rowconfigure(3, weight=1)
 
         # --- Question label (large, centred) ---
         self._question_var = tkinter.StringVar(value="")
@@ -43,6 +44,14 @@ class TrainingDisplay(tkinter.Frame):
         )
         self._score_label.grid(row=1, column=0, pady=4)
 
+        # --- Listen Again button (hidden by default; Hearing mode only) ---
+        self._listen_again_btn = tkinter.ttk.Button(
+            self,
+            text="\u266a Listen Again",
+        )
+        self._listen_again_btn.grid(row=2, column=0, pady=4)
+        self._listen_again_btn.grid_remove()
+
         # --- Feedback label ---
         self._feedback_var = tkinter.StringVar(value="")
         self._feedback_label = tkinter.Label(
@@ -52,7 +61,7 @@ class TrainingDisplay(tkinter.Frame):
             fg='white',
             bg=self._BG_COLOR,
         )
-        self._feedback_label.grid(row=2, column=0, sticky='nsew', pady=(4, 20))
+        self._feedback_label.grid(row=3, column=0, sticky='nsew', pady=(4, 20))
 
     # ------------------------------------------------------------------
     # Public methods (called via UiDispatcher from background threads)
@@ -87,6 +96,27 @@ class TrainingDisplay(tkinter.Frame):
         """Clear the feedback message."""
         self._feedback_var.set("")
         self._feedback_label.configure(fg='white')
+
+    def show_listen_prompt(self) -> None:
+        """Display the listen prompt (Hearing mode: hides the chord name)."""
+        self._question_var.set("\u266a Listen...")
+        self._feedback_var.set("")
+        self._feedback_label.configure(fg='white')
+
+    def set_listen_again_visible(self, visible: bool) -> None:
+        """Show or hide the Listen Again button."""
+        if visible:
+            self._listen_again_btn.grid()
+        else:
+            self._listen_again_btn.grid_remove()
+
+    def set_listen_again_enabled(self, enabled: bool) -> None:
+        """Enable or disable the Listen Again button."""
+        self._listen_again_btn.configure(state='normal' if enabled else 'disabled')
+
+    def set_listen_again_callback(self, callback) -> None:
+        """Register the callback invoked when Listen Again is clicked."""
+        self._listen_again_btn.configure(command=callback)
 
     def reset(self) -> None:
         """Clear all displayed text (call when a training session ends)."""

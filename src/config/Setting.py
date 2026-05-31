@@ -190,6 +190,7 @@ class TrainingSetting():
         self.RootASharp: bool = True
         self.RootB: bool = True
         self.UseFlat: bool = False
+        self.Mode: str = "ChordPlay"
 
         self._debounce_ms: int = DEFAULT_TRAINING_DEBOUNCE_MS
 
@@ -232,6 +233,7 @@ class Setting():
         }
         self.parser["Training"] = {
             "DebounceMs": str(DEFAULT_TRAINING_DEBOUNCE_MS),
+            "Mode": "ChordPlay",
         }
         self.parser["Training.ChordType"] = {
             "Major": str(True),
@@ -278,6 +280,7 @@ class Setting():
         self.gui.EnableTraining = self.parser["GUI"].get("EnableTraining", str(DEFAULT_ENABLE_TRAINING))
         if self.parser.has_section("Training"):
             self.training.DebounceMs = self.parser["Training"].get("DebounceMs", str(DEFAULT_TRAINING_DEBOUNCE_MS))
+            self.training.Mode = self.parser["Training"].get("Mode", "ChordPlay")
         if self.parser.has_section("Training.ChordType"):
             ct = self.parser["Training.ChordType"]
             self.training.Major = ct.getboolean("Major", True)
@@ -320,6 +323,7 @@ class Setting():
             if not self.parser.has_section("Training"):
                 self.parser.add_section("Training")
             self.parser["Training"]["DebounceMs"] = str(self.training.DebounceMs)
+            self.parser["Training"]["Mode"] = self.training.Mode
             if not self.parser.has_section("Training.ChordType"):
                 self.parser.add_section("Training.ChordType")
             self.parser["Training.ChordType"]["Major"] = str(self.training.Major)
