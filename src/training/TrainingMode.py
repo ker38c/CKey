@@ -149,18 +149,18 @@ class TrainingMode:
             question = self._current_question
             if question is None:
                 return
-            if len(pressed_pitch_classes) < question.chord_type.note_count:
+            if len(pressed_pitch_classes) < question.expected_note_count:
                 return
 
-            is_correct = (pressed_pitch_classes == question.pitch_classes)
+            is_correct = (pressed_pitch_classes == question.expected_pitch_classes)
             self._state = _STATE_FEEDBACK
             if is_correct:
                 self._correct += 1
             self._total += 1
             correct_count = self._correct
             total_count = self._total
-            key_names: Optional[List[str]] = None if is_correct else question.canonical_key_names
-            note_names: Optional[List[str]] = None if is_correct else question.note_names
+            key_names: Optional[List[str]] = None if is_correct else question.answer_key_names
+            note_names: Optional[List[str]] = None if is_correct else question.answer_note_names
 
         self._before_feedback(is_correct, question)
         self._dispatcher.post_to('training_display', 'show_score', correct_count, total_count)

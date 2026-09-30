@@ -1,4 +1,5 @@
 """Tests for ChordQuestion and generate_question."""
+import dataclasses
 import sys
 import os
 
@@ -150,3 +151,97 @@ class TestGenerateQuestion:
         q = generate_question([MAJOR], [0], exclude=exclude)
         assert q.chord_type == MAJOR
         assert q.root == 0
+
+
+# ---------------------------------------------------------------------------
+# root_only aware properties
+# ---------------------------------------------------------------------------
+
+class TestExpectedNoteCount:
+    def test_normal_chord_returns_chord_note_count(self):
+        q = ChordQuestion(root=0, chord_type=MAJOR)  # 3-note
+        assert q.expected_note_count == 3
+
+    def test_root_only_returns_one(self):
+        ro = dataclasses.replace(MAJOR, root_only=True)
+        q = ChordQuestion(root=0, chord_type=ro)
+        assert q.expected_note_count == 1
+
+    def test_seventh_chord_normal_returns_four(self):
+        q = ChordQuestion(root=0, chord_type=MAJOR_7TH)
+        assert q.expected_note_count == 4
+
+    def test_seventh_chord_root_only_returns_one(self):
+        ro = dataclasses.replace(MAJOR_7TH, root_only=True)
+        q = ChordQuestion(root=0, chord_type=ro)
+        assert q.expected_note_count == 1
+
+
+class TestExpectedPitchClasses:
+    def test_normal_chord_returns_full_pitch_classes(self):
+        q = ChordQuestion(root=0, chord_type=MAJOR)  # C Major: {0,4,7}
+        assert q.expected_pitch_classes == frozenset({0, 4, 7})
+
+    def test_root_only_returns_root_only_set(self):
+        ro = dataclasses.replace(MAJOR, root_only=True)
+        q = ChordQuestion(root=0, chord_type=ro)
+        assert q.expected_pitch_classes == frozenset({0})
+
+    def test_root_only_non_c_root(self):
+        ro = dataclasses.replace(MINOR, root_only=True)
+        q = ChordQuestion(root=2, chord_type=ro)  # D
+        assert q.expected_pitch_classes == frozenset({2})
+
+
+class TestAnswerNoteNames:
+    def test_normal_chord_returns_all_note_names(self):
+        q = ChordQuestion(root=0, chord_type=MAJOR)  # C, E, G
+        assert q.answer_note_names == ["C", "E", "G"]
+
+    def test_root_only_returns_root_name_only(self):
+        ro = dataclasses.replace(MAJOR, root_only=True)
+        q = ChordQuestion(root=0, chord_type=ro)
+        assert q.answer_note_names == ["C"]
+
+    def test_root_only_non_c_root(self):
+        ro = dataclasses.replace(MINOR, root_only=True)
+        q = ChordQuestion(root=2, chord_type=ro)  # D
+        assert q.answer_note_names == ["D"]
+
+
+class TestAnswerKeyNames:
+    def test_normal_chord_returns_canonical_key_names(self):
+        q = ChordQuestion(root=0, chord_type=MAJOR)  # C3, E3, G3
+        assert q.answer_key_names == ["C3", "E3", "G3"]
+
+    def test_root_only_returns_single_root_key_name(self):
+        ro = dataclasses.replace(MAJOR, root_only=True)
+        q = ChordQuestion(root=0, chord_type=ro)
+        assert q.answer_key_names == ["C3"]
+
+    def test_root_only_non_c_root(self):
+        ro = dataclasses.replace(MINOR, root_only=True)
+        q = ChordQuestion(root=2, chord_type=ro)  # D3
+        assert q.answer_key_names == ["D3"]
+
+
+class TestGetAnswerDisplayName:
+    def test_normal_chord_returns_full_name(self):
+        q = ChordQuestion(root=0, chord_type=MINOR)  # Cm
+        assert q.get_answer_display_name() == "Cm"
+
+    def test_root_only_returns_root_name_only(self):
+        ro = dataclasses.replace(MINOR, root_only=True)
+        q = ChordQuestion(root=0, chord_type=ro)
+        assert q.get_answer_display_name() == "C"
+
+    def test_root_only_uses_flat_notation(self):
+        ro = dataclasses.replace(MINOR, root_only=True)
+        q = ChordQuestion(root=1, chord_type=ro)  # C#/Db
+        assert q.get_answer_display_name(use_flat=True) == "Db"
+        assert q.get_answer_display_name(use_flat=False) == "C#"
+
+    def test_normal_chord_respects_use_flat(self):
+        q = ChordQuestion(root=1, chord_type=MINOR)  # C#m / Dbm
+        assert q.get_answer_display_name(use_flat=True) == "Dbm"
+        assert q.get_answer_display_name(use_flat=False) == "C#m"

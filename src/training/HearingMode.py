@@ -7,8 +7,13 @@ from training.TrainingMode import TrainingMode, _STATE_WAITING
 
 
 def _chord_midi_notes(question: ChordQuestion) -> List[int]:
-    """Return MIDI note numbers for the question's chord, anchored to octave 3 (MIDI 60 = C3)."""
+    """Return MIDI note numbers for the question's chord, anchored to octave 3 (MIDI 60 = C3).
+
+    If the chord type has root_only=True, returns only the root note MIDI number.
+    """
     base = 60 + question.root
+    if question.chord_type.root_only:
+        return [base]
     return sorted(base + (pc - question.root) % 12 for pc in question.pitch_classes)
 
 
@@ -50,7 +55,7 @@ class HearingMode(TrainingMode):
         self._handler.stop_chord()
 
     def _before_feedback(self, is_correct: bool, question: ChordQuestion) -> None:
-        chord_name = question.get_display_name(self._use_flat)
+        chord_name = question.get_answer_display_name(self._use_flat)
         self._dispatcher.post_to('training_display', 'set_listen_again_enabled', False)
         self._dispatcher.post_to('training_display', 'show_question', chord_name)
 

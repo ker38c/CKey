@@ -1,4 +1,5 @@
 """Tests for HearingMode."""
+import dataclasses
 import sys
 import os
 import time
@@ -233,4 +234,123 @@ class TestHearingModeEvaluation:
         time.sleep(0.2)
         assert not dispatcher.has_call('training_display', 'show_feedback_correct')
         assert not dispatcher.has_call('training_display', 'show_feedback_wrong')
+        mode.stop()
+
+
+# ---------------------------------------------------------------------------
+# root_only flag tests
+# ---------------------------------------------------------------------------
+
+from training.HearingMode import _chord_midi_notes
+
+
+class TestChordMidiNotesRootOnly:
+    def test_normal_chord_returns_all_notes(self):
+        question = ChordQuestion(root=0, chord_type=MAJOR)  # C Major: 0,4,7
+        notes = _chord_midi_notes(question)
+        assert notes == sorted([60, 64, 67])
+
+    def test_root_only_returns_single_root_note(self):
+        major_root_only = dataclasses.replace(MAJOR, root_only=True)
+        question = ChordQuestion(root=0, chord_type=major_root_only)
+        notes = _chord_midi_notes(question)
+        assert notes == [60]
+
+    def test_root_only_uses_correct_root_for_non_c(self):
+        # D Minor root = 2, base MIDI = 62
+        minor_root_only = dataclasses.replace(MINOR, root_only=True)
+        question = ChordQuestion(root=2, chord_type=minor_root_only)
+        notes = _chord_midi_notes(question)
+        assert notes == [62]
+
+    def test_root_only_false_returns_full_chord(self):
+        question = ChordQuestion(root=0, chord_type=MINOR)  # C Minor: 0,3,7
+        notes = _chord_midi_notes(question)
+        assert notes == sorted([60, 63, 67])
+
+
+class TestHearingModeRootOnly:
+    def test_start_plays_only_root_when_root_only(self):
+        handler = FakeMidiHandler()
+        major_root_only = dataclasses.replace(MAJOR, root_only=True)
+        mode = HearingMode(FakeDispatcher(), handler, debounce_ms=50)
+        mode.start([major_root_only], [0])  # C Major root_only → MIDI 60
+
+        assert _wait_for(lambda: len(handler.play_calls) > 0)
+        assert handler.play_calls[0] == [60]
+        mode.stop()
+
+    def test_replay_plays_only_root_when_root_only(self):
+        handler = FakeMidiHandler()
+        major_root_only = dataclasses.replace(MAJOR, root_only=True)
+        mode = HearingMode(FakeDispatcher(), handler, debounce_ms=50)
+        mode.start([major_root_only], [0])
+
+        assert _wait_for(lambda: len(handler.play_calls) >= 1)
+        count_before = len(handler.play_calls)
+        mode.replay()
+        assert _wait_for(lambda: len(handler.play_calls) > count_before)
+        assert handler.play_calls[-1] == [60]
+        mode.stop()
+
+    def test_start_plays_full_chord_when_not_root_only(self):
+        handler = FakeMidiHandler()
+        mode = HearingMode(FakeDispatcher(), handler, debounce_ms=50)
+        mode.start([MAJOR], [0])  # C Major → MIDI 60, 64, 67
+
+        assert _wait_for(lambda: len(handler.play_calls) > 0)
+        assert sorted(handler.play_calls[0]) == [60, 64, 67]
+        mode.stop()
+
+    def test_root_only_correct_on_single_root_note(self):
+        """Root Only: pressing only the root note is a correct answer."""
+        dispatcher = FakeDispatcher()
+        major_root_only = dataclasses.replace(MAJOR, root_only=True)
+        mode = HearingMode(dispatcher, FakeMidiHandler(), debounce_ms=30)
+        mode.start([major_root_only], [0])  # C Major root_only, root=C
+
+        assert _wait_for(lambda: dispatcher.has_call('training_display', 'show_listen_prompt'))
+
+        # Press only C (MIDI 60, pitch class 0)
+        mode.on_note_on(60)
+
+        assert _wait_for(lambda: dispatcher.has_call('training_display', 'show_feedback_correct'),
+                         timeout=2.0)
+        assert mode.score == (1, 1)
+        mode.stop()
+
+    def test_root_only_wrong_on_non_root_single_note(self):
+        """Root Only: pressing a wrong single note is incorrect."""
+        dispatcher = FakeDispatcher()
+        major_root_only = dataclasses.replace(MAJOR, root_only=True)
+        mode = HearingMode(dispatcher, FakeMidiHandler(), debounce_ms=30)
+        mode.start([major_root_only], [0])  # C Major root_only, root=C
+
+        assert _wait_for(lambda: dispatcher.has_call('training_display', 'show_listen_prompt'))
+
+        # Press E (MIDI 64, pitch class 4) — wrong
+        mode.on_note_on(64)
+
+        assert _wait_for(lambda: dispatcher.has_call('training_display', 'show_feedback_wrong'),
+                         timeout=2.0)
+        assert mode.score == (0, 1)
+        mode.stop()
+
+    def test_root_only_does_not_accept_full_chord(self):
+        """Root Only: pressing the full chord (3 notes) should evaluate once 1st note is stable,
+        but since pressed_pitch_classes != {root}, it is wrong when extra notes are present."""
+        dispatcher = FakeDispatcher()
+        major_root_only = dataclasses.replace(MAJOR, root_only=True)
+        mode = HearingMode(dispatcher, FakeMidiHandler(), debounce_ms=30)
+        mode.start([major_root_only], [0])  # C Major root_only, root=C
+
+        assert _wait_for(lambda: dispatcher.has_call('training_display', 'show_listen_prompt'))
+
+        # Press C + E + G — 3 notes pressed simultaneously; pitch classes {0,4,7} != {0}
+        mode.on_note_on(60)
+        mode.on_note_on(64)
+        mode.on_note_on(67)
+
+        assert _wait_for(lambda: dispatcher.has_call('training_display', 'show_feedback_wrong'),
+                         timeout=2.0)
         mode.stop()

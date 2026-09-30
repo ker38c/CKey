@@ -1,3 +1,4 @@
+import dataclasses
 import tkinter
 import tkinter.ttk
 
@@ -31,7 +32,7 @@ _SEVENTH_CHORDS = [
     ("Diminished 7th",  ChordLibrary.DIMINISHED_7TH),
 ]
 
-# Maps ChordType.name → TrainingSetting attribute name
+# Maps ChordType.name → TrainingSetting attribute name (enabled)
 _CHORD_NAME_TO_ATTR = {
     "Major":           "Major",
     "Minor":           "Minor",
@@ -84,15 +85,27 @@ class TrainingTab:
         tkinter.Radiobutton(
             mode_frame, text="Chord Play",
             variable=self._mode_var, value=SessionMode.CHORD_PLAY.value,
+            command=self._on_mode_changed,
         ).pack(side='left', padx=(0, 16))
         tkinter.Radiobutton(
             mode_frame, text="Hearing",
             variable=self._mode_var, value=SessionMode.HEARING.value,
+            command=self._on_mode_changed,
         ).pack(side='left')
 
         # ---- Left column: chord type frames ----
         left = tkinter.Frame(self.frame)
         left.grid(row=1, column=0, sticky='nsew', padx=(10, 5), pady=10)
+
+        # Root Only toggle (Hearing mode only)
+        root_only_bar = tkinter.Frame(left)
+        root_only_bar.pack(fill='x', pady=(0, 4))
+        self._root_only_var = tkinter.BooleanVar(value=False)
+        self._root_only_cb = tkinter.Checkbutton(
+            root_only_bar, text="Root Only",
+            variable=self._root_only_var, state='disabled',
+        )
+        self._root_only_cb.pack(side='left')
 
         # 3-note chords
         triad_frame = tkinter.LabelFrame(left, text="Chord Types (3-note)", padx=10, pady=6)
@@ -175,8 +188,14 @@ class TrainingTab:
         Falls back to safe defaults when no chord types or roots are selected,
         or when the debounce value is out of range.
         """
-        chord_types = [ct for var, ct in self._triad_vars if var.get()]
-        chord_types += [ct for var, ct in self._seventh_vars if var.get()]
+        # Root Only applies to Hearing mode only, regardless of the stored checkbox value.
+        root_only = (
+            self._root_only_var.get()
+            and self._mode_var.get() == SessionMode.HEARING.value
+        )
+        chord_types = [ct for var, ct in self._triad_vars + self._seventh_vars if var.get()]
+        if root_only:
+            chord_types = [dataclasses.replace(ct, root_only=True) for ct in chord_types]
 
         roots = [idx for var, idx in self._root_vars if var.get()]
 
@@ -212,10 +231,12 @@ class TrainingTab:
             if attr is not None:
                 var.set(getattr(training_setting, attr))
 
+        self._root_only_var.set(training_setting.RootOnly)
         self._use_flat_var.set(training_setting.UseFlat)
         self._apply_notation_labels()
 
         self._mode_var.set(training_setting.Mode)
+        self._update_root_only_state()
 
         self._debounce_var.set(str(training_setting.DebounceMs))
 
@@ -231,6 +252,7 @@ class TrainingTab:
             if attr is not None:
                 setattr(training_setting, attr, var.get())
 
+        training_setting.RootOnly = self._root_only_var.get()
         training_setting.UseFlat = self._use_flat_var.get()
         training_setting.Mode = self._mode_var.get()
 
@@ -242,6 +264,15 @@ class TrainingTab:
     def _on_notation_changed(self) -> None:
         """Update checkbox labels when the sharp/flat toggle changes."""
         self._apply_notation_labels()
+
+    def _on_mode_changed(self) -> None:
+        """Enable or disable Root Only checkboxes based on the selected mode."""
+        self._update_root_only_state()
+
+    def _update_root_only_state(self) -> None:
+        """Set Root Only checkbutton state based on whether Hearing mode is active."""
+        is_hearing = self._mode_var.get() == SessionMode.HEARING.value
+        self._root_only_cb.config(state='normal' if is_hearing else 'disabled')
 
     def _apply_notation_labels(self) -> None:
         """Set checkbox text to sharp or flat names based on the current toggle."""

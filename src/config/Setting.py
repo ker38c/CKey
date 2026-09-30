@@ -189,6 +189,8 @@ class TrainingSetting():
         self.RootA: bool = True
         self.RootASharp: bool = True
         self.RootB: bool = True
+        # Root Only toggle for Hearing mode (default OFF)
+        self.RootOnly: bool = False
         self.UseFlat: bool = False
         self.Mode: str = "ChordPlay"
 
@@ -234,6 +236,7 @@ class Setting():
         self.parser["Training"] = {
             "DebounceMs": str(DEFAULT_TRAINING_DEBOUNCE_MS),
             "Mode": "ChordPlay",
+            "RootOnly": str(False),
         }
         self.parser["Training.ChordType"] = {
             "Major": str(True),
@@ -281,6 +284,7 @@ class Setting():
         if self.parser.has_section("Training"):
             self.training.DebounceMs = self.parser["Training"].get("DebounceMs", str(DEFAULT_TRAINING_DEBOUNCE_MS))
             self.training.Mode = self.parser["Training"].get("Mode", "ChordPlay")
+            self.training.RootOnly = self.parser["Training"].getboolean("RootOnly", False)
         if self.parser.has_section("Training.ChordType"):
             ct = self.parser["Training.ChordType"]
             self.training.Major = ct.getboolean("Major", True)
@@ -324,6 +328,7 @@ class Setting():
                 self.parser.add_section("Training")
             self.parser["Training"]["DebounceMs"] = str(self.training.DebounceMs)
             self.parser["Training"]["Mode"] = self.training.Mode
+            self.parser["Training"]["RootOnly"] = str(self.training.RootOnly)
             if not self.parser.has_section("Training.ChordType"):
                 self.parser.add_section("Training.ChordType")
             self.parser["Training.ChordType"]["Major"] = str(self.training.Major)

@@ -44,6 +44,17 @@ class ChordQuestion:
             return root_name
         return f"{root_name}{self.chord_type.symbol}"
 
+    def get_answer_display_name(self, use_flat: bool = False) -> str:
+        """Human-readable name shown as the answer in feedback.
+
+        When root_only is True, returns only the root note name (e.g. 'C').
+        Otherwise equivalent to get_display_name().
+        """
+        if self.chord_type.root_only:
+            names = ROOT_NAMES_FLAT if use_flat else ROOT_NAMES
+            return names[self.root]
+        return self.get_display_name(use_flat)
+
     @property
     def pitch_classes(self) -> frozenset:
         """Set of pitch classes (0–11) that form this chord."""
@@ -53,6 +64,48 @@ class ChordQuestion:
     def note_names(self) -> List[str]:
         """Pitch-class names without octave, e.g. ['C', 'E', 'G']."""
         return [ROOT_NAMES[(self.root + interval) % 12] for interval in self.chord_type.intervals]
+
+    @property
+    def expected_note_count(self) -> int:
+        """Number of notes required for evaluation.
+
+        Returns 1 when root_only is True (single root note expected),
+        otherwise returns chord_type.note_count.
+        """
+        return 1 if self.chord_type.root_only else self.chord_type.note_count
+
+    @property
+    def expected_pitch_classes(self) -> frozenset:
+        """Pitch classes that constitute a correct answer.
+
+        Returns frozenset of only the root pitch class when root_only is True,
+        otherwise returns the full chord pitch_classes.
+        """
+        if self.chord_type.root_only:
+            return frozenset({self.root})
+        return self.pitch_classes
+
+    @property
+    def answer_note_names(self) -> List[str]:
+        """Note names shown in wrong-answer feedback.
+
+        Returns only the root name when root_only is True,
+        otherwise returns note_names.
+        """
+        if self.chord_type.root_only:
+            return [ROOT_NAMES[self.root]]
+        return self.note_names
+
+    @property
+    def answer_key_names(self) -> List[str]:
+        """Key names used for keyboard highlight on wrong answer.
+
+        Returns only the root key name (octave 3) when root_only is True,
+        otherwise returns canonical_key_names.
+        """
+        if self.chord_type.root_only:
+            return [_midi_to_key_name(60 + self.root)]
+        return self.canonical_key_names
 
     @property
     def canonical_key_names(self) -> List[str]:
