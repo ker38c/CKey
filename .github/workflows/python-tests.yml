@@ -8,9 +8,11 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   build:
@@ -26,7 +28,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
+        pip install flake8 pytest pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
@@ -37,4 +39,29 @@ jobs:
     - name: Test with pytest
       run: |
         export PYTHONPATH=src
-        pytest
+        pytest --cov=src --cov-report=term-missing --cov-report=xml --cov-report=html
+    - name: Add coverage to job summary
+      if: always()
+      run: |
+        echo "## Coverage" >> "$GITHUB_STEP_SUMMARY"
+        coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
+    - name: Create coverage comment body
+      if: always() && github.event_name == 'pull_request'
+      run: |
+        echo "## Coverage Report" > coverage-comment.md
+        echo "" >> coverage-comment.md
+        coverage report --format=markdown >> coverage-comment.md || echo "Coverage data not available." >> coverage-comment.md
+    - name: Comment coverage on PR
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: coverage
+        path: coverage-comment.md
+    - name: Upload coverage report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: |
+          htmlcov/
+          coverage.xml
