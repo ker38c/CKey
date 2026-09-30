@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   build:
@@ -44,6 +45,18 @@ jobs:
       run: |
         echo "## Coverage" >> "$GITHUB_STEP_SUMMARY"
         coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
+    - name: Create coverage comment body
+      if: always() && github.event_name == 'pull_request'
+      run: |
+        echo "## Coverage Report" > coverage-comment.md
+        echo "" >> coverage-comment.md
+        coverage report --format=markdown >> coverage-comment.md || echo "Coverage data not available." >> coverage-comment.md
+    - name: Comment coverage on PR
+      if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: coverage
+        path: coverage-comment.md
     - name: Upload coverage report
       if: always()
       uses: actions/upload-artifact@v4
